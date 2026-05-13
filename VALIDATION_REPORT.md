@@ -1,6 +1,6 @@
 # Cost-Down History DB (CDH-DB) v1.0 — 検証レポート
 
-_検証実施日時: 2026-05-14 06:35:42_  
+_検証実施日時: 2026-05-14 08:15:23_  
 _対象DB: `/Users/nishimura+/projects/research/cost-down-history-db/cdh.sqlite`_  
 _検証スクリプト: `scripts/validate_db.py`_  
 
@@ -10,22 +10,22 @@ _検証スクリプト: `scripts/validate_db.py`_
 
 ## 1. サマリー
 
-検証は合計 24 項目について行われ、その分布は以下の通りである。 FAIL がゼロまたは少数であれば DB の構造的健全性は確保されており、 WARN 群は今後のメンテナンスで優先的に確認すべき箇所として位置づけられる。
+検証は合計 25 項目について行われ、その分布は以下の通りである。 FAIL がゼロまたは少数であれば DB の構造的健全性は確保されており、 WARN 群は今後のメンテナンスで優先的に確認すべき箇所として位置づけられる。
 
 | 区分 | 件数 |
 |---|---|
 | PASS | 20 |
-| WARN | 4 |
+| WARN | 5 |
 | FAIL | 0 |
 
-テーブル別レコード数は以下の通りである。スキーマ定義どおりに methods 158 件 / evidence 26 件 / genealogy 27 件 / critiques 9 件 / domains 11 件が格納されている。
+テーブル別レコード数は以下の通りである。スキーマ定義どおりに methods 213 件 / evidence 51 件 / genealogy 46 件 / critiques 16 件 / domains 11 件が格納されている。
 
 | テーブル | 行数 |
 |---|---|
-| methods | 158 |
-| evidence | 26 |
-| genealogy | 27 |
-| critiques | 9 |
+| methods | 213 |
+| evidence | 51 |
+| genealogy | 46 |
+| critiques | 16 |
 | domains | 11 |
 
 ## 2. スキーマ整合性
@@ -55,7 +55,8 @@ era_start が 1700–2030 の西暦範囲に収まること、era_start < era_en
 | PASS | era_start < era_end (or era_end == 9999) |
 | PASS | era_end either ≤ 2030 or == 9999 sentinel |
 | PASS | evidence.value has no negatives |
-| WARN | evidence.value magnitude > 1e7: [('CDH-EVD-0029', 16000000000.0, 'USD', 'cost_savings_usd'), ('CDH-EVD-0030', 12000000000.0, 'USD', 'cost_savings_usd'), ('CDH-EVD-0040', 10000000000.0, 'USD', 'cost_savings_usd')] |
+| WARN | evidence.value magnitude > 1e7: [('CDH-EVD-0029', 16000000000.0, 'USD', 'cost_savings_usd'), ('CDH-EVD-0030', 12000000000.0, 'USD', 'cost_savings_usd'), ('CDH-EVD-0040', 10000000000.0, 'USD', 'cost_savings_usd'), ('CDH-EVD-0292', 214000000.0, 'proteins', 'structure_db_growth'), ('CDH-EVD-0294', 40000000.0, 'USD/yr', 'cost_savings_usd_annual')] |
+| WARN | % unit but value > 100 (review whether intended): [('CDH-EVD-0300', 'productivity_increase_pct', 126.0, '%')] |
 | PASS | evidence.year within [1700, 2030] |
 
 ## 4. 系譜構造（genealogy）
@@ -66,7 +67,7 @@ era_start が 1700–2030 の西暦範囲に収まること、era_start < era_en
 |---|---|
 | PASS | no self-loops in genealogy |
 | PASS | no cycles detected in genealogy DAG |
-| WARN | year_transition era misalignment (1): [('CDH-REL-0033', 'year_transition >> child.era_start (+5y tolerance)', 2010, 1991)] |
+| WARN | year_transition era misalignment (5): [('CDH-REL-0083', 'year_transition before parent.era_start', 2013, 2018), ('CDH-REL-0087', 'year_transition before parent.era_start', 2008, 2011), ('CDH-REL-0096', 'year_transition before parent.era_start', 1769, 1770), ('CDH-REL-0097', 'year_transition before parent.era_start', 1775, 1788), ('CDH-REL-0098', 'year_transition before parent.era_start', 1771, 1776)] |
 
 ## 5. メカニズム軸の分布
 
@@ -74,12 +75,12 @@ era_start が 1700–2030 の西暦範囲に収まること、era_start < era_en
 
 | 軸 | 手法数 |
 |---|---|
-| M1 | 27 |
-| M2 | 18 |
-| M3 | 16 |
-| M4 | 20 |
-| M5 | 48 |
-| M6 | 29 |
+| M1 | 33 |
+| M2 | 23 |
+| M3 | 30 |
+| M4 | 26 |
+| M5 | 63 |
+| M6 | 38 |
 
 | 区分 | 内容 |
 |---|---|
@@ -92,32 +93,48 @@ methods.primary_source_url / evidence.source_url / critiques.source_url を重�
 
 | 区分 | 内容 |
 |---|---|
-| WARN | URL liveness: 150/171 OK (21 failure, 20.7s @ 24 parallel) |
+| WARN | URL liveness: 205/242 OK (37 failure, 20.4s @ 24 parallel) |
 
 ### 6.1. 失敗 URL 一覧
 
 | URL | ステータス | エラー |
 |---|---|---|
-| https://asq.org/quality-resources/dmaic | 403 | HTTPError 403 |
+| https://www.nature.com/articles/nature.2015.18190 | 303 | HTTPError 303 |
+| https://academic.oup.com/nar/article/52/D1/D368/7337620 | 403 | HTTPError 403 |
 | https://direct.mit.edu/books/monograph/1856/Design-Rules-Volume-1The-Power-of-Modularity | 403 | HTTPError 403 |
 | https://tech.slashdot.org/story/19/01/05/0248207/what-happened-when-automation-came-to-general-motors | 403 | HTTPError 403 |
+| https://www.adb.org/sites/default/files/publication/964626/adb-brief-299-india-unified-payments-interface.pdf | 403 | HTTPError 403 |
 | https://www.bcg.com/ja-jp/increase-resilience-global-supply-chain | 403 | HTTPError 403 |
 | https://www.bcg.com/publications/1968/business-unit-strategy-growth-experience-curve | 403 | HTTPError 403 |
 | https://www.ecr-community.org/ | 403 | HTTPError 403 |
+| https://www.emerald.com/insight/content/doi/10.1108/jmtm-08-2018-0270/full/html | 403 | HTTPError 403 |
 | https://www.iea.org/ | 403 | HTTPError 403 |
 | https://www.innocentive.com/ | 403 | HTTPError 403 |
 | https://www.netsuite.com/portal/resource/articles/erp/distribution-requirement-planning-drp.shtml | 403 | HTTPError 403 |
 | https://www.projectmanagement.com/blog-post/412/does-six-sigma-kill-creativity- | 403 | HTTPError 403 |
-| https://www.tandfonline.com/doi/abs/10.1080/00207540050031823 | 403 | HTTPError 403 |
 | https://www.value-eng.org/ | 403 | HTTPError 403 |
 | https://www.value-eng.org/page/ValueStandards | 403 | HTTPError 403 |
+| https://deming.org/explore/pdsa-cycle/ | 404 | HTTPError 404 |
+| https://en.wikipedia.org/wiki/I-SPY_trial | 404 | HTTPError 404 |
+| https://evboosters.com/ev-charging-news/the-blueprint-of-an-empire-how-byd-built-global-dominance-through-vertical-integration/ | 404 | HTTPError 404 |
+| https://q-ctrl.com/blog/q-ctrl-transforms-quantum-advantage-outlook-breaking-previous-records-for-optimization-problems-and-outperforming-competitive-technologies-for-optimization-problems-and-outperforming-competitive-technologies/ | 404 | HTTPError 404 |
+| https://sciencedirect.com/article/pii/S1098301520322026 | 404 | HTTPError 404 |
 | https://sortly.com/blog/rfid-vs-barcode-for-inventory-tracking | 404 | HTTPError 404 |
 | https://www.2-data.com/knowledge-hub/a-history-of-salesforce | 404 | HTTPError 404 |
+| https://www.fda.gov/media/120060/download | 404 | HTTPError 404 |
+| https://www.fda.gov/regulatory-information/search-fda-guidance-documents/adaptive-design-clinical-trials-drugs-and-biologics-guidance-industry | 404 | HTTPError 404 |
+| https://www.ice.org.uk/news-views-insights/inside-infrastructure/smeaton-vs-watt-the-steam-engine-rivalry | 404 | HTTPError 404 |
 | https://www.schrodinger.com/life-science/learn/white-papers/reversing-erooms-law-can-computers-dramtically-impact-productivity-drug-discovery/ | 404 | HTTPError 404 |
 | https://www.srgresearch.com/articles/cloud-market-jumped-to-330-billion-in-2024 | 404 | HTTPError 404 |
-| https://www.computerhistory.org/siliconengine/scaling-of-ic-process-design-rules-quantified/ | 503 | HTTPError 503 |
+| https://innovationlabasia.dk/en/shenzhen-the-spot-for-rapid-prototyping/ | 451 | HTTPError 451 |
+| https://www.federalregister.gov/documents/2024/09/18/2024-21078/conducting-clinical-trials-with-decentralized-elements | 500 | HTTPError 500 |
+| https://www.orcalean.com/article/genchi-genbutsu-toyota's-approach-to-quality-and-root-cause-analysis | 500 | HTTPError 500 |
+| https://maaw.info/ArticleSummaries/ArtSumKaplanAnderson2007.htm | 502 | HTTPError 502 |
+| https://azure.microsoft.com/en-us/blog/introducing-phi-3-redefining-whats-possible-with-slms/ | - | timeout |
 | https://corporate.ford.com/articles/history/the-model-t/ | - | timeout |
 | https://indianote.asia/india-it-big3 | - | URLError: [Errno 8] nodename nor servname provided, or not known |
+| https://strateos.com/ | - | URLError: timed out |
+| https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai-2024 | - | timeout |
 | https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/our-insights/the-return-of-zero-base-budgeting | - | timeout |
 
 ## 7. ハルシネーション疑い
@@ -126,7 +143,7 @@ methods.primary_source_url / evidence.source_url / critiques.source_url を重�
 
 | 区分 | 内容 |
 |---|---|
-| WARN | originators with era_start span > 30 years across multiple methods (1): [('トヨタ自動車', [1960, 1990, 2000, 2015], 'CDH-MET-0043,CDH-MET-0044,CDH-MET-0045,CDH-MET-0117,CDH-MET-0120,CDH-MET-0243')] |
+| WARN | originators with era_start span > 30 years across multiple methods (2): [('トヨタ自動車', [1960, 1990, 2000, 2015], 'CDH-MET-0043,CDH-MET-0044,CDH-MET-0045,CDH-MET-0117,CDH-MET-0120,CDH-MET-0243'), ('豊田佐吉/大野耐一', [1890, 1950], 'CDH-MET-0013,CDH-MET-0316')] |
 | PASS | no near-duplicate method names (threshold 0.9) |
 
 ### 7.1. era_start が広く分散した originator
@@ -134,6 +151,7 @@ methods.primary_source_url / evidence.source_url / critiques.source_url を重�
 | originator | era_start 群 | 関連 method_id |
 |---|---|---|
 | トヨタ自動車 | [1960, 1990, 2000, 2015] | CDH-MET-0043,CDH-MET-0044,CDH-MET-0045,CDH-MET-0117,CDH-MET-0120,CDH-MET-0243 |
+| 豊田佐吉/大野耐一 | [1890, 1950] | CDH-MET-0013,CDH-MET-0316 |
 
 ## 8. 修正提案
 
