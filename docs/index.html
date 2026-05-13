@@ -1,0 +1,3752 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cost-Down History DB — 技術・開発のコストダウン歴史的手法DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #FFFFFF;
+    --card: #FFFFFF;
+    --card-hover: #F7F7F5;
+    --accent: #121212;
+    --accent-soft: #555555;
+    --accent-warm: #CC1400;
+    --accent-warm-soft: #B01200;
+    --accent-muted: rgba(204,20,0,0.06);
+    --text: #121212;
+    --text-secondary: #555555;
+    --text-muted: #6B6B6B;
+    --border: #D9D9D9;
+    --border-light: #EEEEEE;
+    --highlight: #CC1400;
+    --surface: #F7F7F5;
+    --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+    --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+    --bg: #121212;
+    --card: #1A1A1A;
+    --card-hover: #222222;
+    --accent: #E0E0E0;
+    --accent-warm: #FF4030;
+    --accent-light: #1A1A1A;
+    --accent-muted: rgba(255,64,48,0.10);
+    --text: #E0E0E0;
+    --text-secondary: #AAAAAA;
+    --text-muted: #8A8A8A;
+    --border: #333333;
+    --border-light: #2A2A2A;
+    --highlight: #FF4030;
+    --surface: #1A1A1A;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: var(--font);
+    font-feature-settings: "palt";
+    line-height: 1.85;
+    letter-spacing: 0.025em;
+}
+.top-bar {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 48px; z-index: 100;
+    background: var(--bg);
+    border-top: 3px solid #121212;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+}
+[data-theme="dark"] .top-bar { border-top: 3px solid var(--accent-warm); }
+.brand {
+    font-size: 14px; font-weight: 700;
+    color: var(--accent-warm); letter-spacing: 0.05em;
+}
+.brand-sub { color: var(--text-secondary); font-weight: 400; margin-left: 8px; font-size: 12px; }
+.theme-toggle {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text); padding: 4px 12px; cursor: pointer;
+    font-size: 12px; border-radius: 2px;
+}
+.theme-toggle:hover { background: var(--accent-muted); border-color: var(--accent-warm); }
+.layout { display: flex; padding-top: 48px; min-height: 100vh; }
+.toc-sidebar {
+    position: fixed; top: 48px; left: 0; bottom: 0;
+    width: 280px; padding: 32px 20px; overflow-y: auto;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 13px;
+}
+.toc-sidebar h4 {
+    font-size: 11px; letter-spacing: 0.1em; color: var(--text-secondary);
+    margin: 0 0 12px; text-transform: uppercase;
+}
+.toc-sidebar ul { list-style: none; padding: 0; margin: 0; }
+.toc-sidebar li { margin: 6px 0; }
+.toc-divider { border-top: 1px solid var(--border); margin: 12px 0; height: 0; }
+.toc-sidebar a {
+    color: var(--text-secondary); text-decoration: none;
+    display: block; padding: 4px 8px; border-radius: 2px;
+    transition: color 0.15s, background 0.15s;
+}
+.toc-sidebar a:hover {
+    color: var(--accent-warm); background: var(--accent-muted);
+}
+.main {
+    margin-left: 280px; flex: 1;
+    padding: 48px 60px 96px;
+    max-width: 880px;
+}
+.hero { margin-bottom: 64px; }
+.hero h1 {
+    font-family: var(--font-serif);
+    font-size: 36px; font-weight: 700;
+    margin: 0 0 16px; line-height: 1.3;
+    color: var(--text);
+}
+.hero .subtitle {
+    font-size: 16px; color: var(--text-secondary);
+    margin: 0 0 24px;
+}
+.hero .badges { display: flex; gap: 12px; flex-wrap: wrap; }
+.hero .badge {
+    font-size: 12px; padding: 4px 10px;
+    background: var(--accent-muted); color: var(--accent-warm);
+    border-radius: 2px;
+}
+.chapter-section {
+    margin-bottom: 80px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border-light);
+}
+.chapter-section h2 {
+    font-family: var(--font-serif);
+    font-size: 24px; font-weight: 700;
+    margin: 0 0 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--accent-warm);
+    color: var(--text);
+}
+.chapter-section h3 {
+    font-size: 18px; margin: 32px 0 12px;
+    color: var(--text);
+}
+.chapter-section > p {
+    font-family: var(--font-serif);
+    text-indent: 1em;
+    margin: 0 0 16px;
+}
+.chapter-section > p:first-of-type { text-indent: 0; }
+.methods-grid { display: flex; flex-direction: column; gap: 20px; }
+.method {
+    background: var(--card);
+    border: 1px solid var(--border-light);
+    border-left: 3px solid var(--accent-warm);
+    padding: 20px 24px;
+    border-radius: 2px;
+}
+.method:hover {
+    background: var(--card-hover);
+    border-left-color: var(--accent-warm-soft);
+}
+.method header h3 {
+    font-size: 16px; margin: 0 0 8px;
+    color: var(--text); font-weight: 700;
+}
+.met-id {
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 11px; color: var(--text-muted);
+    margin-right: 8px;
+}
+.meta {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    font-size: 12px; color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+.meta .era { font-weight: 700; color: var(--accent-warm); }
+.meta .name-en { font-style: italic; }
+.axis-tag {
+    background: var(--accent-muted); color: var(--accent-warm);
+    padding: 2px 8px; border-radius: 2px;
+    font-size: 11px;
+}
+.mechanism {
+    font-family: var(--font-serif);
+    font-size: 14px; line-height: 1.85;
+    margin: 12px 0; color: var(--text);
+}
+.evidence, .critique {
+    margin: 12px 0; padding: 12px 16px;
+    background: var(--surface); border-radius: 2px;
+    font-size: 13px;
+}
+.critique { border-left: 2px solid var(--text-muted); }
+.ev-label {
+    font-size: 11px; letter-spacing: 0.1em;
+    color: var(--text-secondary); margin-bottom: 6px;
+    text-transform: uppercase; font-weight: 700;
+}
+.evidence ul, .critique ul { margin: 0; padding-left: 20px; }
+.evidence li, .critique li { margin: 4px 0; }
+.metric { color: var(--text-muted); font-family: "SF Mono", monospace; font-size: 11px; }
+.case { color: var(--text-muted); font-size: 12px; }
+.method footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+    font-size: 12px;
+}
+.method a {
+    color: var(--accent-warm); text-decoration: none;
+}
+.method a:hover { text-decoration: underline; }
+.status {
+    font-family: "SF Mono", monospace; font-size: 11px;
+    color: var(--text-muted);
+}
+.axes-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+.axis-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    padding: 16px 20px; border-radius: 2px;
+}
+.axis-card h4 {
+    color: var(--accent-warm); margin: 0 0 8px;
+    font-size: 14px;
+}
+.axis-card p { font-size: 13px; margin: 0; color: var(--text-secondary); }
+.stats-table {
+    border-collapse: collapse; width: 100%; max-width: 480px;
+    font-size: 14px;
+}
+.stats-table th, .stats-table td {
+    border-bottom: 1px solid var(--border-light);
+    padding: 10px 16px; text-align: left;
+}
+.stats-table th {
+    background: var(--surface); font-weight: 700;
+    color: var(--text);
+}
+pre {
+    background: var(--surface);
+    padding: 12px 16px; border-radius: 2px;
+    font-size: 13px; overflow-x: auto;
+}
+@media (max-width: 1000px) {
+    .toc-sidebar {
+        position: relative; top: 0; width: 100%;
+        height: auto; border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+    .main { margin-left: 0; padding: 32px 20px 80px; }
+}
+@media print {
+    .toc-sidebar, .top-bar, .theme-toggle { display: none; }
+    .main { margin-left: 0; padding: 20px; }
+    .method { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<nav class="top-bar">
+    <div class="brand">CDH-DB <span class="brand-sub">Cost-Down History Database v1.0</span></div>
+    <button id="themeBtn" class="theme-toggle">ダーク／ライト</button>
+</nav>
+<div class="layout">
+    <aside class="toc-sidebar">
+        <h4>目次</h4>
+        <ul>
+            <li><a href="#R01">01. 科学的管理法・フォーディズム（1900-1950）</a></li><li><a href="#R02">02. TPS・リーン・JIT（1950-1990）</a></li><li><a href="#R03">03. TQM・カイゼン・シックスシグマ</a></li><li><a href="#R04">04. 価値工学・原価企画</a></li><li><a href="#R05">05. 管理会計・原価計算</a></li><li><a href="#R06">06. アウトソーシング・SCM</a></li><li><a href="#R07">07. ムーア則・学習曲線</a></li><li><a href="#R08">08. モジュラー設計・プラットフォーム</a></li><li><a href="#R09">09. ソフトウェア開発手法</a></li><li><a href="#R10">10. OSS・クラウド</a></li><li><a href="#R11">11. エネルギー学習曲線</a></li><li><a href="#R12">12. 建設プレハブ・モジュラー</a></li><li><a href="#R13">13. R&amp;D効率化</a></li><li><a href="#R14">14. 物流・コンテナ化</a></li><li><a href="#R15">15. 自動化・ロボティクス</a></li>
+            
+<li class="toc-divider"></li>
+<li><a href="#mechanism-axes">統合: 6メカニズム軸</a></li>
+<li><a href="#stats">統計</a></li>
+<li><a href="#about">DB概要</a></li>
+
+        </ul>
+    </aside>
+    <main class="main">
+        <header class="hero">
+            <h1>技術・開発のコストダウン歴史的手法DB</h1>
+            <p class="subtitle">230年史を15領域に分割した網羅的知識基盤 — Wattの遠心調速機（1788）から生成AI（2022）まで</p>
+            <div class="badges">
+                <span class="badge">158 methods</span>
+                <span class="badge">26 evidence</span>
+                <span class="badge">27 genealogy</span>
+                <span class="badge">9 critiques</span>
+                <span class="badge">15 regions</span>
+                <span class="badge">6 mechanism axes</span>
+            </div>
+        </header>
+        
+    <section class="chapter-section" id="R01">
+        <h2>科学的管理法・フォーディズム（1900-1950）</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0001">
+        <header>
+            <h3><span class="met-id">CDH-MET-0001</span> 科学的管理法</h3>
+            <div class="meta">
+                <span class="name-en">Scientific Management</span>
+                <span class="era">1911–1950</span>
+                <span class="originator">Frederick W. Taylor</span>
+                <span class="org">ASME / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">作業の細分化・時間計測・動作の標準化・インセンティブシステム</p>
+        
+        <div class="critique"><div class="ev-label">批判・限界</div><ul><li><strong>Harry Braverman（1974）</strong>: 脱スキル化と労働疎外。労働者が判断力を奪われ機械のペースに支配される <a href="https://en.wikipedia.org/wiki/Labor_and_Monopoly_Capital" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <footer>
+            <a href="https://archive.org/details/principlesofscie00taylrich" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0002">
+        <header>
+            <h3><span class="met-id">CDH-MET-0002</span> 動作研究</h3>
+            <div class="meta">
+                <span class="name-en">Motion Study</span>
+                <span class="era">1909–1950</span>
+                <span class="originator">Frank &amp; Lillian Gilbreth</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">映画撮影で作業動作を記録し無駄動作の可視化と排除</p>
+        
+        
+        <footer>
+            <a href="https://web.mit.edu/allanmc/www/TheGilbreths.pdf" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0003">
+        <header>
+            <h3><span class="met-id">CDH-MET-0003</span> ムービングアセンブリライン</h3>
+            <div class="meta">
+                <span class="name-en">Moving Assembly Line</span>
+                <span class="era">1913–1990</span>
+                <span class="originator">Henry Ford</span>
+                <span class="org">Ford Motor / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">ベルトコンベアによる連続流と84工程の分業化</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">cost_reduction_pct</span>: <strong>65.0 %</strong> <span class="case">（Ford Model T, 1924）</span> <a href="https://www.nber.org/system/files/working_papers/w31454/w31454.pdf" target="_blank" rel="noopener">出典</a></li><li><span class="metric">lead_time_reduction</span>: <strong>92.5 %</strong> <span class="case">（Ford Model T, 1914）</span> <a href="https://www.history.com/this-day-in-history/fords-assembly-line-starts-rolling" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://www.history.com/this-day-in-history/fords-assembly-line-starts-rolling" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0004">
+        <header>
+            <h3><span class="met-id">CDH-MET-0004</span> 互換性部品</h3>
+            <div class="meta">
+                <span class="name-en">Interchangeable Parts</span>
+                <span class="era">1798–1900</span>
+                <span class="originator">Eli Whitney / Samuel Colt</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">標準化された工具と治具による精密部品量産</p>
+        
+        
+        <footer>
+            <a href="https://www.eliwhitney.org/eli-whitney-and-whitney-armory" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0005">
+        <header>
+            <h3><span class="met-id">CDH-MET-0005</span> 経験曲線(Wright&#x27;s Law)</h3>
+            <div class="meta">
+                <span class="name-en">Wright&#x27;s Law / Learning Curve</span>
+                <span class="era">1936–現在</span>
+                <span class="originator">Theodore P. Wright</span>
+                <span class="org">Curtiss-Wright / USA</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">累積生産量倍増あたり20%のコスト削減</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">learning_rate</span>: <strong>20.0 %</strong> <span class="case">（航空機製造, 1936）</span> <a href="https://arc.aiaa.org/doi/10.2514/8.155" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://arc.aiaa.org/doi/10.2514/8.155" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0006">
+        <header>
+            <h3><span class="met-id">CDH-MET-0006</span> 5ドル給与制度</h3>
+            <div class="meta">
+                <span class="name-en">Five Dollar Day</span>
+                <span class="era">1914–1930</span>
+                <span class="originator">Henry Ford</span>
+                <span class="org">Ford Motor / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">給与倍増による離職率低下と消費拡大</p>
+        
+        
+        <footer>
+            <a href="https://corporate.ford.com/articles/history/the-model-t/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R02">
+        <h2>TPS・リーン・JIT（1950-1990）</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0010">
+        <header>
+            <h3><span class="met-id">CDH-MET-0010</span> トヨタ生産方式(TPS)</h3>
+            <div class="meta">
+                <span class="name-en">Toyota Production System</span>
+                <span class="era">1948–現在</span>
+                <span class="originator">大野耐一</span>
+                <span class="org">トヨタ自動車 / JPN</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">JITと自働化の二本柱で廃棄を排除し品質を組み込む</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">productivity_increase</span>: <strong>100.0 %</strong> <span class="case">（NUMMI Toyota, 1986）</span> <a href="https://www.lean.org/store/book/the-machine-that-changed-the-world/" target="_blank" rel="noopener">出典</a></li><li><span class="metric">inventory_reduction</span>: <strong>85.7 %</strong> <span class="case">（NUMMI Toyota, 1986）</span> <a href="https://www.lean.org/store/book/the-machine-that-changed-the-world/" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://global.toyota/en/company/vision-and-philosophy/production-system/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0011">
+        <header>
+            <h3><span class="met-id">CDH-MET-0011</span> ジャストインタイム(JIT)</h3>
+            <div class="meta">
+                <span class="name-en">Just-In-Time</span>
+                <span class="era">1936–現在</span>
+                <span class="originator">豊田喜一郎/大野耐一</span>
+                <span class="org">トヨタ自動車 / JPN</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">後工程が必要な分だけを引き取る</p>
+        
+        
+        <footer>
+            <a href="https://www.toyota-global.com/company/history_of_toyota/75years/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0012">
+        <header>
+            <h3><span class="met-id">CDH-MET-0012</span> カンバン方式</h3>
+            <div class="meta">
+                <span class="name-en">Kanban System</span>
+                <span class="era">1953–現在</span>
+                <span class="originator">大野耐一</span>
+                <span class="org">トヨタ自動車 / JPN</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">視覚的カードで後工程の引き取りを制御</p>
+        
+        
+        <footer>
+            <a href="https://kanbanzone.com/resources/lean/toyota-production-system/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0013">
+        <header>
+            <h3><span class="met-id">CDH-MET-0013</span> 自働化</h3>
+            <div class="meta">
+                <span class="name-en">Jidoka / Autonomation</span>
+                <span class="era">1890–現在</span>
+                <span class="originator">豊田佐吉/大野耐一</span>
+                <span class="org">豊田自動織機 / JPN</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">異常検知時の自動停止と品質内製化</p>
+        
+        
+        <footer>
+            <a href="https://centerforlean.com/what-is-jidoka-and-just-in-time/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0014">
+        <header>
+            <h3><span class="met-id">CDH-MET-0014</span> SMED(段取り替え短縮)</h3>
+            <div class="meta">
+                <span class="name-en">Single-Minute Exchange of Die</span>
+                <span class="era">1950–現在</span>
+                <span class="originator">新郷重夫</span>
+                <span class="org">トヨタ自動車 / JPN</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">外段取りと内段取りの分離・並列化</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">setup_time_reduction</span>: <strong>97.5 %</strong> <span class="case">（新郷重夫実績, 1985）</span> <a href="https://www.tandfonline.com/doi/abs/10.1080/00207540050031823" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Single-minute_exchange_of_die" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0015">
+        <header>
+            <h3><span class="met-id">CDH-MET-0015</span> TPM(総合生産保全)</h3>
+            <div class="meta">
+                <span class="name-en">Total Productive Maintenance</span>
+                <span class="era">1971–現在</span>
+                <span class="originator">中島清一</span>
+                <span class="org">DENSO / JPN</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">予防保全+全員参加+自主保全</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">downtime_reduction</span>: <strong>90.0 %</strong> <span class="case">（DENSO TPM, 1976）</span> <a href="https://teeptrak.com/en/what-is-tpm-total-productive-maintenance-2026/" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://teeptrak.com/en/what-is-tpm-total-productive-maintenance-2026/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0016">
+        <header>
+            <h3><span class="met-id">CDH-MET-0016</span> セル生産方式</h3>
+            <div class="meta">
+                <span class="name-en">Cell Manufacturing</span>
+                <span class="era">1975–現在</span>
+                <span class="originator">日本製造企業群</span>
+                <span class="org">RICOH/Canon/Sony/NEC / JPN</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">U字型配置で1-数人が製品全体を完成</p>
+        
+        
+        <footer>
+            <a href="https://www.japanfs.org/en/news/archives/news_id027769.html" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0017">
+        <header>
+            <h3><span class="met-id">CDH-MET-0017</span> リーン生産</h3>
+            <div class="meta">
+                <span class="name-en">Lean Manufacturing</span>
+                <span class="era">1990–現在</span>
+                <span class="originator">Womack/Jones/Roos</span>
+                <span class="org">MIT IMVP / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">TPSの体系化、5年MIT研究で命名</p>
+        
+        
+        <footer>
+            <a href="https://www.lean.org/store/book/the-machine-that-changed-the-world/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0018">
+        <header>
+            <h3><span class="met-id">CDH-MET-0018</span> ポカヨケ</h3>
+            <div class="meta">
+                <span class="name-en">Poka-Yoke</span>
+                <span class="era">1960–現在</span>
+                <span class="originator">新郷重夫</span>
+                <span class="org">トヨタ自動車 / JPN</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">プロセス内の物理的・論理的障壁で不良品生産を構造的に不可能化</p>
+        
+        
+        <footer>
+            <a href="https://www.creativesafetysupply.com/glossary/poka-yoke/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0019">
+        <header>
+            <h3><span class="met-id">CDH-MET-0019</span> Value Stream Mapping</h3>
+            <div class="meta">
+                <span class="name-en">VSM</span>
+                <span class="era">1990–現在</span>
+                <span class="originator">リーン研究者</span>
+                <span class="org">トヨタ系譜 / JPN</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">現状フロー図→将来図→改善計画</p>
+        
+        
+        <footer>
+            <a href="https://asq.org/quality-resources/value-stream-mapping" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R03">
+        <h2>TQM・カイゼン・シックスシグマ</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0020">
+        <header>
+            <h3><span class="met-id">CDH-MET-0020</span> 統計的品質管理(SQC)</h3>
+            <div class="meta">
+                <span class="name-en">Statistical Quality Control</span>
+                <span class="era">1924–現在</span>
+                <span class="originator">Walter Shewhart</span>
+                <span class="org">Bell Labs / USA</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">管理図による共通原因と特殊原因の統計的分離</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Statistical_process_control" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0021">
+        <header>
+            <h3><span class="met-id">CDH-MET-0021</span> Deming 14原則</h3>
+            <div class="meta">
+                <span class="name-en">Deming&#x27;s 14 Points</span>
+                <span class="era">1950–現在</span>
+                <span class="originator">W. Edwards Deming</span>
+                <span class="org">JUSE / USA/JPN</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">システム思考による根本的経営改革</p>
+        
+        
+        <footer>
+            <a href="https://deming.org/explore/fourteen-points/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0022">
+        <header>
+            <h3><span class="met-id">CDH-MET-0022</span> Quality Trilogy</h3>
+            <div class="meta">
+                <span class="name-en">Juran Quality Trilogy</span>
+                <span class="era">1950–現在</span>
+                <span class="originator">Joseph Juran</span>
+                <span class="org">Juran Institute / USA</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">品質計画・統制・改善の三位一体</p>
+        
+        
+        <footer>
+            <a href="https://www.juran.com/blog/the-juran-trilogy-2/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0023">
+        <header>
+            <h3><span class="met-id">CDH-MET-0023</span> 特性要因図</h3>
+            <div class="meta">
+                <span class="name-en">Ishikawa Diagram</span>
+                <span class="era">1945–現在</span>
+                <span class="originator">石川馨</span>
+                <span class="org">東京大学 / JPN</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">多次元因果関係を魚骨図で構造化</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Kaoru_Ishikawa" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0024">
+        <header>
+            <h3><span class="met-id">CDH-MET-0024</span> QCサークル</h3>
+            <div class="meta">
+                <span class="name-en">Quality Circle</span>
+                <span class="era">1960–現在</span>
+                <span class="originator">石川馨</span>
+                <span class="org">JUSE / JPN</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">現場従業員の継続的改善参加</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Quality_circle" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0025">
+        <header>
+            <h3><span class="met-id">CDH-MET-0025</span> ロバスト設計(田口メソッド)</h3>
+            <div class="meta">
+                <span class="name-en">Taguchi Robust Design</span>
+                <span class="era">1960–現在</span>
+                <span class="originator">田口玄一</span>
+                <span class="org">Taguchi Laboratories / JPN</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">ノイズ要因を考慮した実験計画法によるパラメータ最適化</p>
+        
+        
+        <footer>
+            <a href="https://www.isixsigma.com/robust-design-taguchi-method/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0026">
+        <header>
+            <h3><span class="met-id">CDH-MET-0026</span> QFD(品質機能展開)</h3>
+            <div class="meta">
+                <span class="name-en">Quality Function Deployment</span>
+                <span class="era">1966–現在</span>
+                <span class="originator">赤尾洋二</span>
+                <span class="org">三菱重工 / JPN</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">顧客要求を定量的エンジニアリング仕様に変換</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Quality_function_deployment" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0027">
+        <header>
+            <h3><span class="met-id">CDH-MET-0027</span> FMEA</h3>
+            <div class="meta">
+                <span class="name-en">Failure Mode and Effects Analysis</span>
+                <span class="era">1950–現在</span>
+                <span class="originator">NASA等</span>
+                <span class="org">NASA / USA</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">潜在的失敗モードを事前に列挙・評価</p>
+        
+        
+        <footer>
+            <a href="https://asq.org/quality-resources/fmea" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0028">
+        <header>
+            <h3><span class="met-id">CDH-MET-0028</span> ベンチマーキング</h3>
+            <div class="meta">
+                <span class="name-en">Benchmarking</span>
+                <span class="era">1979–現在</span>
+                <span class="originator">Robert Camp</span>
+                <span class="org">Xerox / USA</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">業界最高水準企業の実践をモデルに改善</p>
+        
+        
+        <footer>
+            <a href="https://force9.wordpress.com/wp-content/uploads/2009/03/xerox1.pdf" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0029">
+        <header>
+            <h3><span class="met-id">CDH-MET-0029</span> シックスシグマ</h3>
+            <div class="meta">
+                <span class="name-en">Six Sigma</span>
+                <span class="era">1986–現在</span>
+                <span class="originator">Bill Smith</span>
+                <span class="org">Motorola / USA</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">DPMO 3.4を目標とした統計的プロセス管理</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">cost_savings_usd</span>: <strong>16000000000.0 USD</strong> <span class="case">（Motorola Six Sigma, 2005）</span> <a href="https://www.sixsigmaonline.org/six-sigma-history/" target="_blank" rel="noopener">出典</a></li><li><span class="metric">cost_savings_usd</span>: <strong>12000000000.0 USD</strong> <span class="case">（GE Six Sigma, 2005）</span> <a href="https://www.6sigma.us/ge/six-sigma-case-study-general-electric/" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <div class="critique"><div class="ev-label">批判・限界</div><ul><li><strong>Wharton/Christensen（2007）</strong>: 3M Six Sigma導入後、特許申請件数が低下。完全性追求がハイリスク・ハイリターンを抑圧 <a href="https://www.projectmanagement.com/blog-post/412/does-six-sigma-kill-creativity-" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <footer>
+            <a href="https://www.sixsigmaonline.org/six-sigma-history/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0030">
+        <header>
+            <h3><span class="met-id">CDH-MET-0030</span> DMAIC</h3>
+            <div class="meta">
+                <span class="name-en">DMAIC</span>
+                <span class="era">1990–現在</span>
+                <span class="originator">Six Sigma開発チーム</span>
+                <span class="org">Motorola/GE / USA</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">Define-Measure-Analyze-Improve-Controlの5段階</p>
+        
+        
+        <footer>
+            <a href="https://asq.org/quality-resources/dmaic" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0031">
+        <header>
+            <h3><span class="met-id">CDH-MET-0031</span> DFSS</h3>
+            <div class="meta">
+                <span class="name-en">Design for Six Sigma</span>
+                <span class="era">1995–現在</span>
+                <span class="originator">Motorola/GE</span>
+                <span class="org">GE / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">新製品設計段階での欠陥削減</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Design_for_Six_Sigma" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R04">
+        <h2>価値工学・原価企画</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0040">
+        <header>
+            <h3><span class="met-id">CDH-MET-0040</span> 価値工学(VE)</h3>
+            <div class="meta">
+                <span class="name-en">Value Engineering</span>
+                <span class="era">1947–現在</span>
+                <span class="originator">Lawrence Miles</span>
+                <span class="org">GE / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">代替部品調査で同等機能を低コストで達成</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Lawrence_D._Miles" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0041">
+        <header>
+            <h3><span class="met-id">CDH-MET-0041</span> 価値分析(VA)</h3>
+            <div class="meta">
+                <span class="name-en">Value Analysis</span>
+                <span class="era">1947–現在</span>
+                <span class="originator">Lawrence Miles</span>
+                <span class="org">GE / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">機能再分析で不要機能削除</p>
+        
+        
+        <footer>
+            <a href="https://www.value-eng.org/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0042">
+        <header>
+            <h3><span class="met-id">CDH-MET-0042</span> FAST</h3>
+            <div class="meta">
+                <span class="name-en">Function Analysis System Technique</span>
+                <span class="era">1964–現在</span>
+                <span class="originator">Charles Bytheway</span>
+                <span class="org">SAVE / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">How/Why軸で機能間論理関係を可視化</p>
+        
+        
+        <footer>
+            <a href="https://www.value-eng.org/page/ValueStandards" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0043">
+        <header>
+            <h3><span class="met-id">CDH-MET-0043</span> 原価企画</h3>
+            <div class="meta">
+                <span class="name-en">Target Costing</span>
+                <span class="era">1960–現在</span>
+                <span class="originator">トヨタ自動車</span>
+                <span class="org">トヨタ自動車 / JPN</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">目標価格から逆算して原価目標を設定</p>
+        
+        
+        <footer>
+            <a href="https://www.toyota.co.jp/jpn/company/history/75years/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0044">
+        <header>
+            <h3><span class="met-id">CDH-MET-0044</span> 原価維持</h3>
+            <div class="meta">
+                <span class="name-en">Cost Maintenance</span>
+                <span class="era">1960–現在</span>
+                <span class="originator">トヨタ自動車</span>
+                <span class="org">トヨタ自動車 / JPN</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">標準原価設定と実績対比による逸脱管理</p>
+        
+        
+        <footer>
+            <a href="https://tebiki.jp/genba/useful/kaizen-express/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0045">
+        <header>
+            <h3><span class="met-id">CDH-MET-0045</span> 原価改善</h3>
+            <div class="meta">
+                <span class="name-en">Cost Kaizen</span>
+                <span class="era">1960–現在</span>
+                <span class="originator">トヨタ自動車</span>
+                <span class="org">トヨタ自動車 / JPN</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">QCDS向上目標で現場から小改善を積み上げ</p>
+        
+        
+        <footer>
+            <a href="https://www.ojt-s.jp/kaizenlibrary/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0046">
+        <header>
+            <h3><span class="met-id">CDH-MET-0046</span> ティアダウン分析</h3>
+            <div class="meta">
+                <span class="name-en">Teardown Analysis</span>
+                <span class="era">1960–現在</span>
+                <span class="originator">産業実践</span>
+                <span class="org">自動車産業 / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">競合品を分解し部品別製造原価逆算</p>
+        
+        
+        <footer>
+            <a href="https://leandesign.com/beyond-the-teardown-why-true-benchmarking-intelligence-demands-costing/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0047">
+        <header>
+            <h3><span class="met-id">CDH-MET-0047</span> DTC(Design to Cost)</h3>
+            <div class="meta">
+                <span class="name-en">Design to Cost</span>
+                <span class="era">1970–現在</span>
+                <span class="originator">Boeing/Lockheed</span>
+                <span class="org">Boeing / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">設計初期から原価パラメータを統合</p>
+        
+        
+        <footer>
+            <a href="https://ja.wikipedia.org/wiki/%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%83%BB%E3%83%84%E3%83%BC%E3%83%BB%E3%82%B3%E3%82%B9%E3%83%88" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0048">
+        <header>
+            <h3><span class="met-id">CDH-MET-0048</span> LCC分析</h3>
+            <div class="meta">
+                <span class="name-en">Life Cycle Cost Analysis</span>
+                <span class="era">1965–現在</span>
+                <span class="originator">防衛調達/建設</span>
+                <span class="org">DoD / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">製品ライフサイクル全体の総コストを評価</p>
+        
+        
+        <footer>
+            <a href="https://galorath.com/cost/life-cycle-cost-analysis/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0049">
+        <header>
+            <h3><span class="met-id">CDH-MET-0049</span> Should Cost分析</h3>
+            <div class="meta">
+                <span class="name-en">Should Cost Analysis</span>
+                <span class="era">1980–現在</span>
+                <span class="originator">IBM/Boeing</span>
+                <span class="org">IBM / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">構成部品原価をボトムアップで積上げ</p>
+        
+        
+        <footer>
+            <a href="https://www.facton.com/should-costing/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0050">
+        <header>
+            <h3><span class="met-id">CDH-MET-0050</span> VRP</h3>
+            <div class="meta">
+                <span class="name-en">Variety Reduction Program</span>
+                <span class="era">1980–現在</span>
+                <span class="originator">JMAC</span>
+                <span class="org">JMAC / JPN</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">製品種類・仕様数を削減し複雑性管理</p>
+        
+        
+        <footer>
+            <a href="https://books.google.com/books/about/Variety_Reduction_Program.html" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R05">
+        <h2>管理会計・原価計算</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0060">
+        <header>
+            <h3><span class="met-id">CDH-MET-0060</span> 標準原価計算</h3>
+            <div class="meta">
+                <span class="name-en">Standard Costing</span>
+                <span class="era">1920–現在</span>
+                <span class="originator">F.E. Webner</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">予定単価・予定量設定と差異分析</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Standard_cost_accounting" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0061">
+        <header>
+            <h3><span class="met-id">CDH-MET-0061</span> 直接原価計算</h3>
+            <div class="meta">
+                <span class="name-en">Direct/Variable Costing</span>
+                <span class="era">1900–現在</span>
+                <span class="originator">Jonathan Harris</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">変動費のみを製品コストとして扱う</p>
+        
+        
+        <footer>
+            <a href="https://ideas.repec.org/a/bla/abacus/v34y1998i1p92-119.html" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0062">
+        <header>
+            <h3><span class="met-id">CDH-MET-0062</span> 活動基準原価計算(ABC)</h3>
+            <div class="meta">
+                <span class="name-en">Activity-Based Costing</span>
+                <span class="era">1987–現在</span>
+                <span class="originator">Kaplan &amp; Cooper</span>
+                <span class="org">HBS / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">活動とコスト・ドライバーで間接費を配賦</p>
+        
+        <div class="critique"><div class="ev-label">批判・限界</div><ul><li><strong>業界実装者（2010）</strong>: ABC導入の中途放棄率30-40%。データ収集複雑性と運用コスト <a href="https://journals.sagepub.com/doi/full/10.1177/21582440231178785" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Activity-based_costing" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0063">
+        <header>
+            <h3><span class="met-id">CDH-MET-0063</span> バランススコアカード</h3>
+            <div class="meta">
+                <span class="name-en">Balanced Scorecard</span>
+                <span class="era">1992–現在</span>
+                <span class="originator">Kaplan &amp; Norton</span>
+                <span class="org">HBS / USA</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">4視点で戦略目標を階層化</p>
+        
+        
+        <footer>
+            <a href="https://hbr.org/1992/01/the-balanced-scorecard-measures-that-drive-performance-2" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0064">
+        <header>
+            <h3><span class="met-id">CDH-MET-0064</span> 制約条件の理論(TOC)</h3>
+            <div class="meta">
+                <span class="name-en">Theory of Constraints</span>
+                <span class="era">1984–現在</span>
+                <span class="originator">Eliyahu Goldratt</span>
+                <span class="org">- / ISR</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">ボトルネックを特定し制約能力を最大化</p>
+        
+        
+        <footer>
+            <a href="https://www.tocinstitute.org/theory-of-constraints.html" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0065">
+        <header>
+            <h3><span class="met-id">CDH-MET-0065</span> ゼロベース予算編成(ZBB)</h3>
+            <div class="meta">
+                <span class="name-en">Zero-Based Budgeting</span>
+                <span class="era">1970–現在</span>
+                <span class="originator">Peter Pyhrr</span>
+                <span class="org">Texas Instruments / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">前年度を起点とせず全費目をゼロから正当化</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">cost_reduction_pct</span>: <strong>25.0 %</strong> <span class="case">（Texas Instruments, 1975）</span> <a href="https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/our-insights/the-return-of-zero-base-budgeting" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Zero-based_budgeting" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0066">
+        <header>
+            <h3><span class="met-id">CDH-MET-0066</span> カイゼン・コスティング</h3>
+            <div class="meta">
+                <span class="name-en">Kaizen Costing</span>
+                <span class="era">1970–現在</span>
+                <span class="originator">日本製造業</span>
+                <span class="org">トヨタ系 / JPN</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">製造段階で部品原価を段階的に削減</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Kaizen_costing" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0067">
+        <header>
+            <h3><span class="met-id">CDH-MET-0067</span> TCO</h3>
+            <div class="meta">
+                <span class="name-en">Total Cost of Ownership</span>
+                <span class="era">1987–現在</span>
+                <span class="originator">Gartner Group</span>
+                <span class="org">Gartner / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">購買価格＋運用＋保守＋撤去の総コスト</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Total_cost_of_ownership" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0068">
+        <header>
+            <h3><span class="met-id">CDH-MET-0068</span> EVA</h3>
+            <div class="meta">
+                <span class="name-en">Economic Value Added</span>
+                <span class="era">1983–現在</span>
+                <span class="originator">Stern Stewart</span>
+                <span class="org">Stern Stewart &amp; Co. / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">税引後営業利益と資本コストの差</p>
+        
+        
+        <footer>
+            <a href="https://digitalcommons.liberty.edu/cgi/viewcontent.cgi?article=1028&amp;context=honors" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R06">
+        <h2>アウトソーシング・SCM</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0080">
+        <header>
+            <h3><span class="met-id">CDH-MET-0080</span> Kodak-IBM ITアウトソーシング</h3>
+            <div class="meta">
+                <span class="name-en">Kodak-IBM Outsourcing</span>
+                <span class="era">1989–1995</span>
+                <span class="originator">Kodak/IBM</span>
+                <span class="org">Kodak / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">メインフレームの外部管理化とスケールメリット</p>
+        
+        <div class="critique"><div class="ev-label">批判・限界</div><ul><li><strong>経営学者（2012）</strong>: Kodak破産(2012)。IT外部委託でコア競争力喪失 <a href="https://www.theamegroup.com/a-history-of-it-outsourcing/" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <footer>
+            <a href="https://www.theamegroup.com/a-history-of-it-outsourcing/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0081">
+        <header>
+            <h3><span class="met-id">CDH-MET-0081</span> オフショアリング(印度IT)</h3>
+            <div class="meta">
+                <span class="name-en">Offshoring India IT</span>
+                <span class="era">1990–現在</span>
+                <span class="originator">Infosys/TCS/Wipro</span>
+                <span class="org">Infosys / IND</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">グローバルデリバリーモデルによる低時給開発</p>
+        
+        
+        <footer>
+            <a href="https://indianote.asia/india-it-big3" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0082">
+        <header>
+            <h3><span class="met-id">CDH-MET-0082</span> EMS/ファブレス分業</h3>
+            <div class="meta">
+                <span class="name-en">EMS/Fabless Split</span>
+                <span class="era">1987–現在</span>
+                <span class="originator">TSMC/Foxconn</span>
+                <span class="org">TSMC / TWN</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">設計と製造の水平分業による民主化</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">capex_reduction_pct</span>: <strong>90.0 %</strong> <span class="case">（TSMC, 2000）</span> <a href="https://blog.nisshinbo-microdevices.co.jp/ja/process15_foundry" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <div class="critique"><div class="ev-label">批判・限界</div><ul><li><strong>地政学者（2024）</strong>: TSMC台湾依存92%。一国集中の地政学リスク <a href="https://www.bcg.com/ja-jp/increase-resilience-global-supply-chain" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <footer>
+            <a href="https://blog.nisshinbo-microdevices.co.jp/ja/process15_foundry" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0083">
+        <header>
+            <h3><span class="met-id">CDH-MET-0083</span> コアコンピタンス論</h3>
+            <div class="meta">
+                <span class="name-en">Core Competence Theory</span>
+                <span class="era">1990–現在</span>
+                <span class="originator">Prahalad &amp; Hamel</span>
+                <span class="org">HBS / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">非コア業務外部化とR&amp;D資源集中</p>
+        
+        
+        <footer>
+            <a href="https://hbr.org/1990/05/the-core-competence-of-the-corporation" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0084">
+        <header>
+            <h3><span class="met-id">CDH-MET-0084</span> 取引費用経済学</h3>
+            <div class="meta">
+                <span class="name-en">Transaction Cost Economics</span>
+                <span class="era">1937–現在</span>
+                <span class="originator">Coase/Williamson</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">Make-or-Buy判断の経済学的最適化</p>
+        
+        
+        <footer>
+            <a href="https://www.sciencedirect.com/topics/social-sciences/transaction-cost-economics" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0085">
+        <header>
+            <h3><span class="met-id">CDH-MET-0085</span> リショアリング</h3>
+            <div class="meta">
+                <span class="name-en">Reshoring</span>
+                <span class="era">2018–現在</span>
+                <span class="originator">米国大手製造業</span>
+                <span class="org">Tesla/Ford / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">国内回帰・地政学リスク回避</p>
+        
+        
+        <footer>
+            <a href="https://www.nikkei.com/compass/theme/183250/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0086">
+        <header>
+            <h3><span class="met-id">CDH-MET-0086</span> フレンドショアリング</h3>
+            <div class="meta">
+                <span class="name-en">Friendshoring</span>
+                <span class="era">2021–現在</span>
+                <span class="originator">US/JP/TWN/IND</span>
+                <span class="org">IPEF / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">友好国間でのサプライチェーン再構築</p>
+        
+        
+        <footer>
+            <a href="https://ja.wikipedia.org/wiki/%E3%83%95%E3%83%AC%E3%83%B3%E3%83%89%E3%82%B7%E3%83%A7%E3%82%A2%E3%83%AA%E3%83%B3%E3%82%B0" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R07">
+        <h2>ムーア則・学習曲線</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0090">
+        <header>
+            <h3><span class="met-id">CDH-MET-0090</span> ムーアの法則</h3>
+            <div class="meta">
+                <span class="name-en">Moore&#x27;s Law</span>
+                <span class="era">1965–現在</span>
+                <span class="originator">Gordon Moore</span>
+                <span class="org">Fairchild/Intel / USA</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">トランジスタ密度が18-24ヶ月で倍加</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">doubling_period_months</span>: <strong>18.0 months</strong> <span class="case">（Intel/半導体, 1975）</span> <a href="https://hasler.ece.gatech.edu/Published_papers/Technology_overview/gordon_moore_1965_article.pdf" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://hasler.ece.gatech.edu/Published_papers/Technology_overview/gordon_moore_1965_article.pdf" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: declining / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0091">
+        <header>
+            <h3><span class="met-id">CDH-MET-0091</span> Dennard Scaling</h3>
+            <div class="meta">
+                <span class="name-en">Dennard Scaling</span>
+                <span class="era">1974–2005</span>
+                <span class="originator">Robert Dennard</span>
+                <span class="org">IBM / USA</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">電圧・電流を同率縮小し電力密度一定維持</p>
+        
+        
+        <footer>
+            <a href="https://www.computerhistory.org/siliconengine/scaling-of-ic-process-design-rules-quantified/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0092">
+        <header>
+            <h3><span class="met-id">CDH-MET-0092</span> Koomey&#x27;s Law</h3>
+            <div class="meta">
+                <span class="name-en">Koomey&#x27;s Law</span>
+                <span class="era">2010–現在</span>
+                <span class="originator">Jonathan Koomey</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">計算エネルギー効率の倍加周期</p>
+        
+        
+        <footer>
+            <a href="https://www.technologyreview.com/2011/09/12/191382/a-new-and-improved-moores-law/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0093">
+        <header>
+            <h3><span class="met-id">CDH-MET-0093</span> Swanson&#x27;s Law</h3>
+            <div class="meta">
+                <span class="name-en">Swanson&#x27;s Law</span>
+                <span class="era">2012–現在</span>
+                <span class="originator">Richard Swanson</span>
+                <span class="org">SunPower / USA</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">PV倍加あたり20%コスト低減</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">cost_reduction_ratio</span>: <strong>700.0 倍</strong> <span class="case">（PV業界, 2024）</span> <a href="https://en.wikipedia.org/wiki/Swanson%27s_law" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Swanson%27s_law" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0094">
+        <header>
+            <h3><span class="met-id">CDH-MET-0094</span> Carlson Curve</h3>
+            <div class="meta">
+                <span class="name-en">Carlson Curve</span>
+                <span class="era">2003–現在</span>
+                <span class="originator">Rob Carlson</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">DNA配列コスト倍加周期14-18ヶ月</p>
+        
+        
+        <footer>
+            <a href="http://www.synthesis.cc/synthesis/2022/10/dna-synthesis-cost-data" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0095">
+        <header>
+            <h3><span class="met-id">CDH-MET-0095</span> Kryder&#x27;s Law</h3>
+            <div class="meta">
+                <span class="name-en">Kryder&#x27;s Law</span>
+                <span class="era">2005–現在</span>
+                <span class="originator">Mark Kryder</span>
+                <span class="org">Seagate / USA</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">HDD容量倍加周期13ヶ月→現在減速</p>
+        
+        
+        <footer>
+            <a href="https://www.scientificamerican.com/article/kryders-law/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: declining / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0096">
+        <header>
+            <h3><span class="met-id">CDH-MET-0096</span> Nielsen&#x27;s Law</h3>
+            <div class="meta">
+                <span class="name-en">Nielsen&#x27;s Law</span>
+                <span class="era">1998–現在</span>
+                <span class="originator">Jakob Nielsen</span>
+                <span class="org">NNG / USA</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">ネットワーク帯域年50%成長</p>
+        
+        
+        <footer>
+            <a href="https://www.nngroup.com/articles/law-of-bandwidth/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0097">
+        <header>
+            <h3><span class="met-id">CDH-MET-0097</span> 経験曲線(BCG)</h3>
+            <div class="meta">
+                <span class="name-en">Experience Curve</span>
+                <span class="era">1968–現在</span>
+                <span class="originator">Bruce Henderson</span>
+                <span class="org">BCG / USA</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">倍加あたり20-30%総コスト低減</p>
+        
+        
+        <footer>
+            <a href="https://www.bcg.com/publications/1968/business-unit-strategy-growth-experience-curve" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0098">
+        <header>
+            <h3><span class="met-id">CDH-MET-0098</span> 規模の経済</h3>
+            <div class="meta">
+                <span class="name-en">Economies of Scale</span>
+                <span class="era">1776–現在</span>
+                <span class="originator">Adam Smith他</span>
+                <span class="org">- / GBR</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">固定費分散による単位コスト低減</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Economies_of_scale" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0099">
+        <header>
+            <h3><span class="met-id">CDH-MET-0099</span> 範囲の経済</h3>
+            <div class="meta">
+                <span class="name-en">Economies of Scope</span>
+                <span class="era">1981–現在</span>
+                <span class="originator">Panzar &amp; Willig</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">複数製品の共用設備・知識でコスト低減</p>
+        
+        
+        <footer>
+            <a href="https://socialsci.libretexts.org/Bookshelves/Economics/Applied_Economics" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R08">
+        <h2>モジュラー設計・プラットフォーム</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0110">
+        <header>
+            <h3><span class="met-id">CDH-MET-0110</span> IBM System/360</h3>
+            <div class="meta">
+                <span class="name-en">IBM System/360</span>
+                <span class="era">1964–1980</span>
+                <span class="originator">Gene Amdahl</span>
+                <span class="org">IBM / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">アーキテクチャと実装の分離で互換性確保</p>
+        
+        
+        <footer>
+            <a href="https://people.eecs.berkeley.edu/~kubitron/courses/cs252/handouts/papers/amdahl64.pdf" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0111">
+        <header>
+            <h3><span class="met-id">CDH-MET-0111</span> Design Rules(モジュラー性)</h3>
+            <div class="meta">
+                <span class="name-en">Design Rules / Modularity</span>
+                <span class="era">2000–現在</span>
+                <span class="originator">Baldwin &amp; Clark</span>
+                <span class="org">HBS / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">モジュール間の設計規則で並列開発</p>
+        
+        
+        <footer>
+            <a href="https://direct.mit.edu/books/monograph/1856/Design-Rules-Volume-1The-Power-of-Modularity" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0112">
+        <header>
+            <h3><span class="met-id">CDH-MET-0112</span> 建築的イノベーション</h3>
+            <div class="meta">
+                <span class="name-en">Architectural Innovation</span>
+                <span class="era">1990–現在</span>
+                <span class="originator">Henderson &amp; Clark</span>
+                <span class="org">HBS / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">コンポーネント知識と建築知識の組合せ変更</p>
+        
+        
+        <footer>
+            <a href="https://www.hbs.edu/faculty/Pages/item.aspx?num=36748" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0113">
+        <header>
+            <h3><span class="met-id">CDH-MET-0113</span> DFMA</h3>
+            <div class="meta">
+                <span class="name-en">Design for Manufacturing &amp; Assembly</span>
+                <span class="era">1980–現在</span>
+                <span class="originator">Boothroyd &amp; Dewhurst</span>
+                <span class="org">URI / USA</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">部品数最小化と組立容易性設計</p>
+        
+        
+        <footer>
+            <a href="https://www.dfma.com/origins.asp" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0114">
+        <header>
+            <h3><span class="met-id">CDH-MET-0114</span> マスカスタマイゼーション</h3>
+            <div class="meta">
+                <span class="name-en">Mass Customization</span>
+                <span class="era">1993–現在</span>
+                <span class="originator">B. Joseph Pine II</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">モジュール再組合せで多様性供給</p>
+        
+        
+        <footer>
+            <a href="https://wiki.p2pfoundation.net/Mass_Customization" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0115">
+        <header>
+            <h3><span class="met-id">CDH-MET-0115</span> プロダクトプラットフォーム</h3>
+            <div class="meta">
+                <span class="name-en">Product Platform Strategy</span>
+                <span class="era">1997–現在</span>
+                <span class="originator">Meyer &amp; Lehnerd</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">複数製品系列が共通プラットフォームを共有</p>
+        
+        
+        <footer>
+            <a href="https://www.semanticscholar.org/paper/The-power-of-product-platforms" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0116">
+        <header>
+            <h3><span class="met-id">CDH-MET-0116</span> VW MQB</h3>
+            <div class="meta">
+                <span class="name-en">VW Modular Transverse Matrix</span>
+                <span class="era">2012–現在</span>
+                <span class="originator">VWグループ</span>
+                <span class="org">VW / DEU</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">横置きエンジン標準と下部プラットフォーム共通化</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">cost_reduction_pct</span>: <strong>20.0 %</strong> <span class="case">（VW MQB, 2012）</span> <a href="https://en.wikipedia.org/wiki/Volkswagen_Group_MQB_platform" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Volkswagen_Group_MQB_platform" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0117">
+        <header>
+            <h3><span class="met-id">CDH-MET-0117</span> Toyota TNGA</h3>
+            <div class="meta">
+                <span class="name-en">Toyota New Global Architecture</span>
+                <span class="era">2015–現在</span>
+                <span class="originator">トヨタ自動車</span>
+                <span class="org">トヨタ自動車 / JPN</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">標準座席高さで100車種を40-50モジュール化</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">cost_reduction_pct</span>: <strong>20.0 %</strong> <span class="case">（Toyota TNGA, 2015）</span> <a href="https://global.toyota/en/mobility/tnga/index.html" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://global.toyota/en/mobility/tnga/index.html" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0118">
+        <header>
+            <h3><span class="met-id">CDH-MET-0118</span> Renault-Nissan CMF</h3>
+            <div class="meta">
+                <span class="name-en">Common Module Family</span>
+                <span class="era">2012–現在</span>
+                <span class="originator">Renault-Nissan</span>
+                <span class="org">RNA / FRA/JPN</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">5モジュール標準化で14モデル1600万台/年対応</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Renault%E2%80%93Nissan_Common_Module_Family" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0119">
+        <header>
+            <h3><span class="met-id">CDH-MET-0119</span> ISOねじ規格</h3>
+            <div class="meta">
+                <span class="name-en">ISO Metric Screw Thread</span>
+                <span class="era">1947–現在</span>
+                <span class="originator">ISO</span>
+                <span class="org">ISO / -</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">ねじ径・ピッチの国際統一</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/ISO_metric_screw_thread" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0120">
+        <header>
+            <h3><span class="met-id">CDH-MET-0120</span> トヨタCCC21</h3>
+            <div class="meta">
+                <span class="name-en">Toyota CCC21</span>
+                <span class="era">2000–2004</span>
+                <span class="originator">トヨタ自動車</span>
+                <span class="org">トヨタ自動車 / JPN</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">173主要部品の車種横断共通化で30%原価低減</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">cost_savings_usd</span>: <strong>10000000000.0 USD</strong> <span class="case">（トヨタCCC21, 2004）</span> <a href="https://www.reliableplant.com/Read/25896/" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://www.reliableplant.com/Read/25896/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0121">
+        <header>
+            <h3><span class="met-id">CDH-MET-0121</span> DfX統合</h3>
+            <div class="meta">
+                <span class="name-en">Design for X (Integrated)</span>
+                <span class="era">2000–現在</span>
+                <span class="originator">GE/3M/Siemens等</span>
+                <span class="org">- / GLOBAL</span>
+                <span class="axis-tag" data-axis="M4">M4 設計時のコスト織込み</span>
+            </div>
+        </header>
+        <p class="mechanism">DfM/DfA/DfC/DfE/DfRの並列最適化</p>
+        
+        
+        <footer>
+            <a href="https://www.ttelectronics.com/blog/design-for-excellence/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0122">
+        <header>
+            <h3><span class="met-id">CDH-MET-0122</span> インテグラル型理論</h3>
+            <div class="meta">
+                <span class="name-en">Integral vs Modular Architecture</span>
+                <span class="era">1998–現在</span>
+                <span class="originator">藤本隆宏</span>
+                <span class="org">東京大学 / JPN</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">すり合わせと組合せのトレードオフ</p>
+        
+        
+        <footer>
+            <a href="https://ocw.u-tokyo.ac.jp/lecture_files/gf_12/9/notes/ja/09fujimoto.pdf" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R09">
+        <h2>ソフトウェア開発手法</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0140">
+        <header>
+            <h3><span class="met-id">CDH-MET-0140</span> 構造化プログラミング</h3>
+            <div class="meta">
+                <span class="name-en">Structured Programming</span>
+                <span class="era">1968–現在</span>
+                <span class="originator">E. Dijkstra</span>
+                <span class="org">- / NLD</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">goto排除による可読性・保守性向上</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Structured_programming" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0141">
+        <header>
+            <h3><span class="met-id">CDH-MET-0141</span> ウォーターフォール</h3>
+            <div class="meta">
+                <span class="name-en">Waterfall Model</span>
+                <span class="era">1970–1995</span>
+                <span class="originator">Winston Royce</span>
+                <span class="org">TRW / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">フェーズ分離による大規模化対応</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Waterfall_model" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0142">
+        <header>
+            <h3><span class="met-id">CDH-MET-0142</span> COCOMO</h3>
+            <div class="meta">
+                <span class="name-en">COCOMO</span>
+                <span class="era">1981–現在</span>
+                <span class="originator">Barry Boehm</span>
+                <span class="org">TRW / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">コスト・ドライバー数値化による工数推定</p>
+        
+        
+        <footer>
+            <a href="https://boehmcsse.org/tools/cocomo81/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0143">
+        <header>
+            <h3><span class="met-id">CDH-MET-0143</span> XP</h3>
+            <div class="meta">
+                <span class="name-en">Extreme Programming</span>
+                <span class="era">1999–現在</span>
+                <span class="originator">Kent Beck</span>
+                <span class="org">Chrysler / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">ペアプログラミング+TDDで変更コスト削減</p>
+        
+        
+        <footer>
+            <a href="https://archive.org/details/extremeprogrammi00beck" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0144">
+        <header>
+            <h3><span class="met-id">CDH-MET-0144</span> Agile Manifesto</h3>
+            <div class="meta">
+                <span class="name-en">Agile Manifesto</span>
+                <span class="era">2001–現在</span>
+                <span class="originator">17名独立派</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">変更対応とドキュメント簡素化</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">success_rate_pct</span>: <strong>42.0 %</strong> <span class="case">（Agile Manifesto, 2020）</span> <a href="https://www.mountaingoatsoftware.com/blog/agile-succeeds-three-times-more-often-than-waterfall" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://agilemanifesto.org/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0145">
+        <header>
+            <h3><span class="met-id">CDH-MET-0145</span> Scrum</h3>
+            <div class="meta">
+                <span class="name-en">Scrum</span>
+                <span class="era">1995–現在</span>
+                <span class="originator">Schwaber/Sutherland</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">固定期間スプリント+固定チーム構成</p>
+        
+        
+        <footer>
+            <a href="https://www.scrum.org/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0146">
+        <header>
+            <h3><span class="met-id">CDH-MET-0146</span> Lean Software Development</h3>
+            <div class="meta">
+                <span class="name-en">Lean Software Development</span>
+                <span class="era">2003–現在</span>
+                <span class="originator">Mary/Tom Poppendieck</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">工業製造の7無駄をソフトウェアに適用</p>
+        
+        
+        <footer>
+            <a href="https://www.oreilly.com/library/view/lean-software-development/0321150783/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0147">
+        <header>
+            <h3><span class="met-id">CDH-MET-0147</span> CI/CD</h3>
+            <div class="meta">
+                <span class="name-en">Continuous Integration/Delivery</span>
+                <span class="era">2006–現在</span>
+                <span class="originator">Martin Fowler</span>
+                <span class="org">ThoughtWorks / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">ビルド/テスト/デプロイの自動化</p>
+        
+        
+        <footer>
+            <a href="https://martinfowler.com/articles/continuousIntegration.html" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0148">
+        <header>
+            <h3><span class="met-id">CDH-MET-0148</span> DevOps</h3>
+            <div class="meta">
+                <span class="name-en">DevOps</span>
+                <span class="era">2009–現在</span>
+                <span class="originator">Allspaw/Hammond</span>
+                <span class="org">Flickr / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">開発-運用統一チーム化とIaC</p>
+        
+        
+        <footer>
+            <a href="https://dora.dev/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0149">
+        <header>
+            <h3><span class="met-id">CDH-MET-0149</span> SRE</h3>
+            <div class="meta">
+                <span class="name-en">Site Reliability Engineering</span>
+                <span class="era">2005–現在</span>
+                <span class="originator">Google</span>
+                <span class="org">Google / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">ソフトウェアエンジニアリングを運用に適用</p>
+        
+        
+        <footer>
+            <a href="https://sre.google/sre-book/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0150">
+        <header>
+            <h3><span class="met-id">CDH-MET-0150</span> Kanban (ソフトウェア)</h3>
+            <div class="meta">
+                <span class="name-en">Kanban (Software)</span>
+                <span class="era">2007–現在</span>
+                <span class="originator">David Anderson</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">WIP制限と流れ最適化</p>
+        
+        
+        <footer>
+            <a href="https://www.atlassian.com/agile/kanban" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0151">
+        <header>
+            <h3><span class="met-id">CDH-MET-0151</span> Microservices</h3>
+            <div class="meta">
+                <span class="name-en">Microservices Architecture</span>
+                <span class="era">2013–現在</span>
+                <span class="originator">Google/Netflix</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">デプロイ単位小分けと独立スケール</p>
+        
+        <div class="critique"><div class="ev-label">批判・限界</div><ul><li><strong>Martin Fowler（2020）</strong>: Microservices採用企業の42%がモノリス回帰。複雑性シフト <a href="https://martinfowler.com/articles/microservice-trade-offs.html" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <footer>
+            <a href="https://martinfowler.com/articles/microservices.html" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0152">
+        <header>
+            <h3><span class="met-id">CDH-MET-0152</span> IaC</h3>
+            <div class="meta">
+                <span class="name-en">Infrastructure as Code</span>
+                <span class="era">2010–現在</span>
+                <span class="originator">Puppet/Chef/Terraform</span>
+                <span class="org">HashiCorp / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">宣言的インフラ管理と再現性</p>
+        
+        
+        <footer>
+            <a href="https://spacelift.io/blog/infrastructure-as-code" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0153">
+        <header>
+            <h3><span class="met-id">CDH-MET-0153</span> Low-Code/No-Code</h3>
+            <div class="meta">
+                <span class="name-en">Low-Code/No-Code</span>
+                <span class="era">2010–現在</span>
+                <span class="originator">OutSystems/Mendix</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">ビジュアルプログラミングで開発時間90%短縮</p>
+        
+        
+        <footer>
+            <a href="https://www.outsystems.com/blog/posts/low-code-roi/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0154">
+        <header>
+            <h3><span class="met-id">CDH-MET-0154</span> GitHub Copilot</h3>
+            <div class="meta">
+                <span class="name-en">GitHub Copilot</span>
+                <span class="era">2021–現在</span>
+                <span class="originator">OpenAI/GitHub</span>
+                <span class="org">Microsoft / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">LLMによるコード補完生成</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">speed_increase_pct</span>: <strong>55.8 %</strong> <span class="case">（GitHub Copilot, 2022）</span> <a href="https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <div class="critique"><div class="ev-label">批判・限界</div><ul><li><strong>GitClear（2025）</strong>: Copilot生成コード複製率増加。短期生産性 vs 長期保守性のトレードオフ <a href="https://www.gitclear.com/ai_assistant_code_quality_2025_research" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <footer>
+            <a href="https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R10">
+        <h2>OSS・クラウド</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0170">
+        <header>
+            <h3><span class="met-id">CDH-MET-0170</span> GNU/フリーソフトウェア</h3>
+            <div class="meta">
+                <span class="name-en">GNU/Free Software</span>
+                <span class="era">1983–現在</span>
+                <span class="originator">Richard Stallman</span>
+                <span class="org">FSF / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">ソース公開とcopyleft GPL</p>
+        
+        
+        <footer>
+            <a href="https://www.gnu.org/gnu/initial-announcement.en.html" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0171">
+        <header>
+            <h3><span class="met-id">CDH-MET-0171</span> Linux</h3>
+            <div class="meta">
+                <span class="name-en">Linux Kernel</span>
+                <span class="era">1991–現在</span>
+                <span class="originator">Linus Torvalds</span>
+                <span class="org">Linux Foundation / FIN</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">GNU+Unix互換OSの自由拡張</p>
+        
+        
+        <footer>
+            <a href="https://www.linuxfoundation.org/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0172">
+        <header>
+            <h3><span class="met-id">CDH-MET-0172</span> Open Source Initiative</h3>
+            <div class="meta">
+                <span class="name-en">Open Source Initiative</span>
+                <span class="era">1998–現在</span>
+                <span class="originator">E. Raymond/B. Perens</span>
+                <span class="org">OSI / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">営利化モデルとしてのOSS定義</p>
+        
+        
+        <footer>
+            <a href="https://opensource.org/about/history-of-the-open-source-initiative/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0173">
+        <header>
+            <h3><span class="met-id">CDH-MET-0173</span> LAMPスタック</h3>
+            <div class="meta">
+                <span class="name-en">LAMP Stack</span>
+                <span class="era">1995–現在</span>
+                <span class="originator">OSS各種</span>
+                <span class="org">- / GLOBAL</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">Linux+Apache+MySQL+PHPの統合無料化</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/LAMP_(software_bundle)" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0174">
+        <header>
+            <h3><span class="met-id">CDH-MET-0174</span> Salesforce SaaS</h3>
+            <div class="meta">
+                <span class="name-en">Salesforce SaaS</span>
+                <span class="era">1999–現在</span>
+                <span class="originator">Marc Benioff</span>
+                <span class="org">Salesforce / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">CapEx→OpEx転換と月額課金</p>
+        
+        
+        <footer>
+            <a href="https://www.2-data.com/knowledge-hub/a-history-of-salesforce" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0175">
+        <header>
+            <h3><span class="met-id">CDH-MET-0175</span> AWS EC2</h3>
+            <div class="meta">
+                <span class="name-en">Amazon EC2 (IaaS)</span>
+                <span class="era">2006–現在</span>
+                <span class="originator">AWS</span>
+                <span class="org">Amazon / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">仮想マシン市場の民主化</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">market_size_usd_b</span>: <strong>330.0 USD billion</strong> <span class="case">（クラウド市場, 2024）</span> <a href="https://www.srgresearch.com/articles/cloud-market-jumped-to-330-billion-in-2024" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Amazon_Elastic_Compute_Cloud" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0176">
+        <header>
+            <h3><span class="met-id">CDH-MET-0176</span> Docker</h3>
+            <div class="meta">
+                <span class="name-en">Docker Containers</span>
+                <span class="era">2013–現在</span>
+                <span class="originator">Solomon Hykes</span>
+                <span class="org">Docker Inc. / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">コンテナ化によるデプロイ単位標準化</p>
+        
+        
+        <footer>
+            <a href="https://www.aquasec.com/blog/a-brief-history-of-containers-from-1970s-chroot-to-docker-2016/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0177">
+        <header>
+            <h3><span class="met-id">CDH-MET-0177</span> Kubernetes</h3>
+            <div class="meta">
+                <span class="name-en">Kubernetes</span>
+                <span class="era">2014–現在</span>
+                <span class="originator">Google/CNCF</span>
+                <span class="org">CNCF / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">コンテナオーケストレーション標準</p>
+        
+        
+        <footer>
+            <a href="https://v1-32.docs.kubernetes.io/blog/2024/06/06/10-years-of-kubernetes/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0178">
+        <header>
+            <h3><span class="met-id">CDH-MET-0178</span> AWS Lambda</h3>
+            <div class="meta">
+                <span class="name-en">AWS Lambda (Serverless)</span>
+                <span class="era">2014–現在</span>
+                <span class="originator">AWS</span>
+                <span class="org">Amazon / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">イベント駆動の実行秒数課金</p>
+        
+        
+        <footer>
+            <a href="https://aws.amazon.com/blogs/aws/aws-lambda-turns-ten-the-first-decade-of-serverless-innovation/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0179">
+        <header>
+            <h3><span class="met-id">CDH-MET-0179</span> Twilio API</h3>
+            <div class="meta">
+                <span class="name-en">Twilio API Economy</span>
+                <span class="era">2008–現在</span>
+                <span class="originator">Evan Cooke</span>
+                <span class="org">Twilio / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">通信インフラ統合化と月額課金</p>
+        
+        
+        <footer>
+            <a href="https://www.ideaplan.io/case-studies/stripe-api-first-platform" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0180">
+        <header>
+            <h3><span class="met-id">CDH-MET-0180</span> Stripe API</h3>
+            <div class="meta">
+                <span class="name-en">Stripe Payment API</span>
+                <span class="era">2010–現在</span>
+                <span class="originator">Patrick/John Collison</span>
+                <span class="org">Stripe / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">決済インフラのAPI化</p>
+        
+        
+        <footer>
+            <a href="https://www.ideaplan.io/case-studies/stripe-api-first-platform" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0181">
+        <header>
+            <h3><span class="met-id">CDH-MET-0181</span> IBM PC x86</h3>
+            <div class="meta">
+                <span class="name-en">IBM PC + x86</span>
+                <span class="era">1981–現在</span>
+                <span class="originator">IBM/Intel</span>
+                <span class="org">IBM / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">プロプライエタリ→互換機市場化</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/IBM_Personal_Computer" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0182">
+        <header>
+            <h3><span class="met-id">CDH-MET-0182</span> ARM ISA</h3>
+            <div class="meta">
+                <span class="name-en">ARM Architecture Licensing</span>
+                <span class="era">1985–現在</span>
+                <span class="originator">ARM Holdings</span>
+                <span class="org">ARM / GBR</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">ロイヤリティ型IPライセンスモデル</p>
+        
+        
+        <footer>
+            <a href="https://newsroom.arm.com/blog/arm-official-history" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R11">
+        <h2>エネルギー学習曲線</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0200">
+        <header>
+            <h3><span class="met-id">CDH-MET-0200</span> PV学習曲線</h3>
+            <div class="meta">
+                <span class="name-en">Solar PV Learning Curve</span>
+                <span class="era">1976–現在</span>
+                <span class="originator">PV産業</span>
+                <span class="org">- / GLOBAL</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">倍加あたり20-24%モジュール価格低減</p>
+        
+        
+        <footer>
+            <a href="https://ourworldindata.org/cheap-renewables-growth" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0201">
+        <header>
+            <h3><span class="met-id">CDH-MET-0201</span> Li-ion電池学習曲線</h3>
+            <div class="meta">
+                <span class="name-en">Lithium-ion Battery Learning Curve</span>
+                <span class="era">1991–現在</span>
+                <span class="originator">電池産業</span>
+                <span class="org">- / GLOBAL</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">倍加あたり18-20%価格低減</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">cost_reduction_pct</span>: <strong>99.0 %</strong> <span class="case">（Li-ion業界, 2024）</span> <a href="https://ourworldindata.org/battery-price-decline" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://ourworldindata.org/battery-price-decline" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0202">
+        <header>
+            <h3><span class="met-id">CDH-MET-0202</span> 風力学習曲線</h3>
+            <div class="meta">
+                <span class="name-en">Wind Energy Learning Curve</span>
+                <span class="era">1980–現在</span>
+                <span class="originator">風力産業</span>
+                <span class="org">- / GLOBAL</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">陸上15-23%・洋上3-31%</p>
+        
+        
+        <footer>
+            <a href="https://www.sciencedirect.com/science/article/abs/pii/S0960148111006161" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0203">
+        <header>
+            <h3><span class="met-id">CDH-MET-0203</span> Haitz&#x27;s Law(LED)</h3>
+            <div class="meta">
+                <span class="name-en">Haitz&#x27;s Law</span>
+                <span class="era">1968–現在</span>
+                <span class="originator">Roland Haitz</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">10年で照明出力20倍・費用1/10</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Haitz%27s_law" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0204">
+        <header>
+            <h3><span class="met-id">CDH-MET-0204</span> 水素電解槽学習曲線</h3>
+            <div class="meta">
+                <span class="name-en">Hydrogen Electrolyzer Learning</span>
+                <span class="era">2000–現在</span>
+                <span class="originator">水素産業</span>
+                <span class="org">- / EU</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">PEM 32.1%・AEL 22.9%学習率</p>
+        
+        
+        <footer>
+            <a href="https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2020/Dec/IRENA_Green_hydrogen_cost_2020.pdf" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0205">
+        <header>
+            <h3><span class="met-id">CDH-MET-0205</span> 原子力負学習曲線</h3>
+            <div class="meta">
+                <span class="name-en">Nuclear Forgetting Curve</span>
+                <span class="era">1970–現在</span>
+                <span class="originator">原子力産業</span>
+                <span class="org">- / GLOBAL</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">規制ラチェット効果で単価上昇</p>
+        
+        <div class="critique"><div class="ev-label">批判・限界</div><ul><li><strong>IISD/Oxford Smith（2024）</strong>: CCS 40年で学習率ゼロ。標準化困難・展開不足・規制不確実 <a href="https://www.iisd.org/articles/deep-dive/why-carbon-capture-storage-cost-remains-high" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <footer>
+            <a href="https://world-nuclear.org/information-library/economic-aspects/economics-of-nuclear-power" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: declining / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0206">
+        <header>
+            <h3><span class="met-id">CDH-MET-0206</span> DOE SunShot Initiative</h3>
+            <div class="meta">
+                <span class="name-en">DOE SunShot Initiative</span>
+                <span class="era">2011–2020</span>
+                <span class="originator">US DOE</span>
+                <span class="org">DOE / USA</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">PVコスト目標を3年前倒し達成</p>
+        
+        
+        <footer>
+            <a href="https://www.energy.gov/eere/solar/sunshot-initiative" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0207">
+        <header>
+            <h3><span class="met-id">CDH-MET-0207</span> フィードインタリフ(FIT)</h3>
+            <div class="meta">
+                <span class="name-en">Feed-in Tariff</span>
+                <span class="era">1990–現在</span>
+                <span class="originator">DE/JP他</span>
+                <span class="org">- / GLOBAL</span>
+                <span class="axis-tag" data-axis="M2">M2 学習効果と規模効果</span>
+            </div>
+        </header>
+        <p class="mechanism">再エネ買取価格保証による学習投資誘導</p>
+        
+        
+        <footer>
+            <a href="https://www.iea.org/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R12">
+        <h2>建設プレハブ・モジュラー</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0220">
+        <header>
+            <h3><span class="met-id">CDH-MET-0220</span> Sears Modern Homes</h3>
+            <div class="meta">
+                <span class="name-en">Sears Modern Homes Kit</span>
+                <span class="era">1908–1942</span>
+                <span class="originator">Sears Roebuck</span>
+                <span class="org">Sears / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">工場プレカット+標準設計+梱包配送</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Sears_Modern_Homes" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0221">
+        <header>
+            <h3><span class="met-id">CDH-MET-0221</span> Levittown開発</h3>
+            <div class="meta">
+                <span class="name-en">Levittown Development</span>
+                <span class="era">1947–1955</span>
+                <span class="originator">William Levitt</span>
+                <span class="org">Levitt &amp; Sons / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">自動車組立ラインの流れ作業を住宅に適用</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">cost_reduction_pct</span>: <strong>50.0 %</strong> <span class="case">（Levittown, 1947）</span> <a href="https://www.planetizen.com/definition/levittown" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://www.planetizen.com/definition/levittown" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0222">
+        <header>
+            <h3><span class="met-id">CDH-MET-0222</span> PC工法</h3>
+            <div class="meta">
+                <span class="name-en">Precast Concrete Construction</span>
+                <span class="era">1960–現在</span>
+                <span class="originator">建設業界</span>
+                <span class="org">- / GLOBAL</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">工場部材製造と現場組立の分業</p>
+        
+        
+        <footer>
+            <a href="https://www.ad-hzm.co.jp/solution/pca/detail_01/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0223">
+        <header>
+            <h3><span class="met-id">CDH-MET-0223</span> ユニット工法</h3>
+            <div class="meta">
+                <span class="name-en">Unit Construction Method</span>
+                <span class="era">1970–現在</span>
+                <span class="originator">積水ハウス/大和ハウス</span>
+                <span class="org">積水ハウス / JPN</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">工場で外装・配管・建具を装着したユニットを現場組立</p>
+        
+        
+        <footer>
+            <a href="https://www.sekisuihouse.co.jp/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0224">
+        <header>
+            <h3><span class="met-id">CDH-MET-0224</span> Lean Construction(LPS)</h3>
+            <div class="meta">
+                <span class="name-en">Last Planner System</span>
+                <span class="era">1997–現在</span>
+                <span class="originator">Glenn Ballard</span>
+                <span class="org">LCI / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">フォアマンの最後の計画者権限化</p>
+        
+        
+        <footer>
+            <a href="https://leanconstruction.org/about/lci-history/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0225">
+        <header>
+            <h3><span class="met-id">CDH-MET-0225</span> IPD</h3>
+            <div class="meta">
+                <span class="name-en">Integrated Project Delivery</span>
+                <span class="era">1997–現在</span>
+                <span class="originator">LCI</span>
+                <span class="org">LCI / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">設計者・施工者・発注者の共有契約</p>
+        
+        
+        <footer>
+            <a href="https://leanconstruction.org/lean-topics/integrated-project-delivery-ipd/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0226">
+        <header>
+            <h3><span class="met-id">CDH-MET-0226</span> BIM</h3>
+            <div class="meta">
+                <span class="name-en">Building Information Modeling</span>
+                <span class="era">2000–現在</span>
+                <span class="originator">建築業界</span>
+                <span class="org">- / GLOBAL</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">3D統合モデルによる干渉チェックと部品管理</p>
+        
+        
+        <footer>
+            <a href="https://build-app.jp/column/1652/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0227">
+        <header>
+            <h3><span class="met-id">CDH-MET-0227</span> Modular Building Institute</h3>
+            <div class="meta">
+                <span class="name-en">Modular Building Institute</span>
+                <span class="era">1983–現在</span>
+                <span class="originator">MBI</span>
+                <span class="org">MBI / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">工場完全生産→トレーラー輸送→組立</p>
+        
+        
+        <footer>
+            <a href="https://www.modular.org/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0228">
+        <header>
+            <h3><span class="met-id">CDH-MET-0228</span> Broad Group 急速建築</h3>
+            <div class="meta">
+                <span class="name-en">Broad Group Rapid Construction</span>
+                <span class="era">2013–現在</span>
+                <span class="originator">Broad Group</span>
+                <span class="org">Broad Group / CHN</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">95%プレファブ化で工期1/50</p>
+        
+        
+        <footer>
+            <a href="https://www.archdaily.com/tag/broad-group" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0229">
+        <header>
+            <h3><span class="met-id">CDH-MET-0229</span> i-Construction</h3>
+            <div class="meta">
+                <span class="name-en">i-Construction</span>
+                <span class="era">2016–現在</span>
+                <span class="originator">国土交通省</span>
+                <span class="org">MLIT / JPN</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">3Dデータ・IoT・ドローン・AI最適化</p>
+        
+        
+        <footer>
+            <a href="https://www.mlit.go.jp/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0230">
+        <header>
+            <h3><span class="met-id">CDH-MET-0230</span> 3Dプリント建築</h3>
+            <div class="meta">
+                <span class="name-en">3D Printed Construction</span>
+                <span class="era">2020–現在</span>
+                <span class="originator">大林組他</span>
+                <span class="org">大林組 / JPN</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">セメント系・生分解性樹脂の層積造形</p>
+        
+        
+        <footer>
+            <a href="https://www.obayashi.co.jp/technology/shoho/087/2023_087_17.pdf" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R13">
+        <h2>R&amp;D効率化</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0240">
+        <header>
+            <h3><span class="met-id">CDH-MET-0240</span> 実験計画法(DoE)</h3>
+            <div class="meta">
+                <span class="name-en">Design of Experiments</span>
+                <span class="era">1935–現在</span>
+                <span class="originator">Ronald Fisher</span>
+                <span class="org">Rothamsted / GBR</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">因子分析の統計学的最適設計</p>
+        
+        
+        <footer>
+            <a href="https://www.scientific-computing.com/analysis-opinion/how-design-experiments-lowers-costs-rd" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0241">
+        <header>
+            <h3><span class="met-id">CDH-MET-0241</span> Stage-Gate法</h3>
+            <div class="meta">
+                <span class="name-en">Stage-Gate Process</span>
+                <span class="era">1988–現在</span>
+                <span class="originator">Robert Cooper</span>
+                <span class="org">- / CAN</span>
+                <span class="axis-tag" data-axis="M3">M3 品質の事前組込み</span>
+            </div>
+        </header>
+        <p class="mechanism">定義段階と評価ゲートの交互実施</p>
+        
+        
+        <footer>
+            <a href="https://www.stage-gate.com/blog/the-stage-gate-model-an-overview/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0242">
+        <header>
+            <h3><span class="met-id">CDH-MET-0242</span> コンカレント・エンジニアリング</h3>
+            <div class="meta">
+                <span class="name-en">Concurrent Engineering</span>
+                <span class="era">1988–現在</span>
+                <span class="originator">DARPA</span>
+                <span class="org">DARPA / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">設計・製造・調達の並列実行</p>
+        
+        
+        <footer>
+            <a href="https://usersolutions.com/blog/concurrent-engineering" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0243">
+        <header>
+            <h3><span class="met-id">CDH-MET-0243</span> Set-Based CE</h3>
+            <div class="meta">
+                <span class="name-en">Set-Based Concurrent Engineering</span>
+                <span class="era">1990–現在</span>
+                <span class="originator">トヨタ自動車</span>
+                <span class="org">トヨタ自動車 / JPN</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">複数設計パターンの同時展開と後期収束</p>
+        
+        
+        <footer>
+            <a href="https://sloanreview.mit.edu/article/toyotas-principles-of-setbased-concurrent-engineering/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0244">
+        <header>
+            <h3><span class="met-id">CDH-MET-0244</span> オープンイノベーション</h3>
+            <div class="meta">
+                <span class="name-en">Open Innovation</span>
+                <span class="era">2003–現在</span>
+                <span class="originator">Henry Chesbrough</span>
+                <span class="org">UC Berkeley / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">外部知識の流入・流出の双方向フロー</p>
+        
+        
+        <footer>
+            <a href="https://sloanreview.mit.edu/article/the-era-of-open-innovation/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0245">
+        <header>
+            <h3><span class="met-id">CDH-MET-0245</span> InnoCentive</h3>
+            <div class="meta">
+                <span class="name-en">InnoCentive Crowdsourcing</span>
+                <span class="era">2001–現在</span>
+                <span class="originator">Alpheus Bingham</span>
+                <span class="org">Eli Lilly / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">グローバル専門家ネットワークへの問題公開と賞金</p>
+        
+        
+        <footer>
+            <a href="https://www.innocentive.com/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0246">
+        <header>
+            <h3><span class="met-id">CDH-MET-0246</span> リーン・スタートアップ</h3>
+            <div class="meta">
+                <span class="name-en">Lean Startup</span>
+                <span class="era">2011–現在</span>
+                <span class="originator">Eric Ries</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">Build-Measure-Learn反復とMVP</p>
+        
+        
+        <footer>
+            <a href="https://theleanstartup.com/principles" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0247">
+        <header>
+            <h3><span class="met-id">CDH-MET-0247</span> AI創薬</h3>
+            <div class="meta">
+                <span class="name-en">AI Drug Discovery</span>
+                <span class="era">2018–現在</span>
+                <span class="originator">Schrodinger/DeepMind</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">GNNとLLMによる分子設計</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">development_time_reduction</span>: <strong>62.5 %</strong> <span class="case">（AI創薬, 2023）</span> <a href="https://www.schrodinger.com/life-science/learn/white-papers/reversing-erooms-law-can-computers-dramtically-impact-productivity-drug-discovery/" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://www.schrodinger.com/life-science/learn/white-papers/reversing-erooms-law-can-computers-dramtically-impact-productivity-drug-discovery/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R14">
+        <h2>物流・コンテナ化</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0260">
+        <header>
+            <h3><span class="met-id">CDH-MET-0260</span> コンテナ化</h3>
+            <div class="meta">
+                <span class="name-en">Containerization</span>
+                <span class="era">1956–現在</span>
+                <span class="originator">Malcolm McLean</span>
+                <span class="org">Sea-Land / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">標準化コンテナの一括搬送</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">loading_cost_ratio</span>: <strong>36.4 倍</strong> <span class="case">（Ideal-X コンテナ, 1956）</span> <a href="https://transportgeography.org/contents/chapter1/the-setting-of-global-transportation-systems/idealx-first-containeriship-1956/" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://transportgeography.org/contents/chapter1/the-setting-of-global-transportation-systems/idealx-first-containeriship-1956/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0261">
+        <header>
+            <h3><span class="met-id">CDH-MET-0261</span> ISO 668コンテナ標準化</h3>
+            <div class="meta">
+                <span class="name-en">ISO 668 Container Standardization</span>
+                <span class="era">1968–現在</span>
+                <span class="originator">ISO</span>
+                <span class="org">ISO / -</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">海陸空シームレス輸送の規格統一</p>
+        
+        
+        <footer>
+            <a href="https://chs-containergroup.com/us/iso-668/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0262">
+        <header>
+            <h3><span class="met-id">CDH-MET-0262</span> ハブ&amp;スポーク</h3>
+            <div class="meta">
+                <span class="name-en">Hub-and-Spoke</span>
+                <span class="era">1971–現在</span>
+                <span class="originator">Frederick Smith</span>
+                <span class="org">FedEx / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">中央ハブでの集約と放射状配送</p>
+        
+        
+        <footer>
+            <a href="https://www.logisticshalloffame.net/en/members/frederick-w-smith" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0263">
+        <header>
+            <h3><span class="met-id">CDH-MET-0263</span> VMI</h3>
+            <div class="meta">
+                <span class="name-en">Vendor Managed Inventory</span>
+                <span class="era">1985–現在</span>
+                <span class="originator">Walmart-P&amp;G</span>
+                <span class="org">Walmart / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">POS・在庫データのリアルタイム共有</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">inventory_reduction_pct</span>: <strong>30.0 %</strong> <span class="case">（Walmart-P&amp;G VMI, 1990）</span> <a href="https://supplierwiki.supplypike.com/articles/what-is-vendor-managed-inventory" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://supplierwiki.supplypike.com/articles/what-is-vendor-managed-inventory" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0264">
+        <header>
+            <h3><span class="met-id">CDH-MET-0264</span> クロスドック</h3>
+            <div class="meta">
+                <span class="name-en">Cross-Docking</span>
+                <span class="era">1980–現在</span>
+                <span class="originator">Walmart他</span>
+                <span class="org">Walmart / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">到着貨物の即時開梱・仕分け・積替</p>
+        
+        
+        <footer>
+            <a href="https://www.shipbob.com/blog/cross-docking/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0265">
+        <header>
+            <h3><span class="met-id">CDH-MET-0265</span> UPC/Barcode</h3>
+            <div class="meta">
+                <span class="name-en">UPC Barcode</span>
+                <span class="era">1974–現在</span>
+                <span class="originator">GS1</span>
+                <span class="org">GS1 / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">自動商品識別による在庫精度向上</p>
+        
+        
+        <footer>
+            <a href="https://sortly.com/blog/rfid-vs-barcode-for-inventory-tracking" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0266">
+        <header>
+            <h3><span class="met-id">CDH-MET-0266</span> CPFR</h3>
+            <div class="meta">
+                <span class="name-en">Collaborative Planning Forecasting Replenishment</span>
+                <span class="era">1995–現在</span>
+                <span class="originator">VICS</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">販売・マーケティング・SCMプロセス統合</p>
+        
+        
+        <footer>
+            <a href="https://www.shipbob.com/blog/collaborative-planning-forecasting-and-replenishment/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0267">
+        <header>
+            <h3><span class="met-id">CDH-MET-0267</span> DRP</h3>
+            <div class="meta">
+                <span class="name-en">Distribution Requirements Planning</span>
+                <span class="era">1980–現在</span>
+                <span class="originator">業界実装</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">需要予測→必要在庫量→配送ネットワーク最適化</p>
+        
+        
+        <footer>
+            <a href="https://www.netsuite.com/portal/resource/articles/erp/distribution-requirement-planning-drp.shtml" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0268">
+        <header>
+            <h3><span class="met-id">CDH-MET-0268</span> ECR</h3>
+            <div class="meta">
+                <span class="name-en">Efficient Consumer Response</span>
+                <span class="era">1990–現在</span>
+                <span class="originator">食品業界</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M5">M5 境界の解体と再結合</span>
+            </div>
+        </header>
+        <p class="mechanism">メーカー・小売・流通の協調</p>
+        
+        
+        <footer>
+            <a href="https://www.ecr-community.org/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0269">
+        <header>
+            <h3><span class="met-id">CDH-MET-0269</span> ラストマイル最適化</h3>
+            <div class="meta">
+                <span class="name-en">Last-Mile Delivery Optimization</span>
+                <span class="era">2010–現在</span>
+                <span class="originator">Amazon他</span>
+                <span class="org">Amazon / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">地理プーリング+ギグ配送+ルート最適化</p>
+        
+        
+        <footer>
+            <a href="https://fareye.com/resources/blogs/last-mile-delivery-costs" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+    <section class="chapter-section" id="R15">
+        <h2>自動化・ロボティクス</h2>
+        <div class="methods-grid">
+            
+    <article class="method" id="CDH-MET-0280">
+        <header>
+            <h3><span class="met-id">CDH-MET-0280</span> Watt遠心調速機</h3>
+            <div class="meta">
+                <span class="name-en">Watt Centrifugal Governor</span>
+                <span class="era">1788–現在</span>
+                <span class="originator">James Watt</span>
+                <span class="org">- / GBR</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">負帰還制御による自動速度調節</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Centrifugal_governor" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0281">
+        <header>
+            <h3><span class="met-id">CDH-MET-0281</span> Cybernetics</h3>
+            <div class="meta">
+                <span class="name-en">Cybernetics Theory</span>
+                <span class="era">1948–現在</span>
+                <span class="originator">Norbert Wiener</span>
+                <span class="org">MIT / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">フィードバック・ループと情報理論の統合</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Cybernetics" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0282">
+        <header>
+            <h3><span class="met-id">CDH-MET-0282</span> NC工作機械</h3>
+            <div class="meta">
+                <span class="name-en">Numerical Control Machine</span>
+                <span class="era">1952–現在</span>
+                <span class="originator">MIT/John Parsons</span>
+                <span class="org">MIT / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">パンチテープで複雑3D形状を自動加工</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/History_of_numerical_control" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0283">
+        <header>
+            <h3><span class="met-id">CDH-MET-0283</span> PRONTO NC言語</h3>
+            <div class="meta">
+                <span class="name-en">PRONTO NC Language</span>
+                <span class="era">1957–現在</span>
+                <span class="originator">Patrick Hanratty</span>
+                <span class="org">GE / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">初の商用CAM言語</p>
+        
+        
+        <footer>
+            <a href="https://novedge.com/blogs/design-news/design-software-history-from-pronto-to-anvil-hanratty-portability-and-the-commercial-architecture-of-cad-cam/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: legacy / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0284">
+        <header>
+            <h3><span class="met-id">CDH-MET-0284</span> Unimate産業ロボット</h3>
+            <div class="meta">
+                <span class="name-en">Unimate Industrial Robot</span>
+                <span class="era">1961–現在</span>
+                <span class="originator">George Devol</span>
+                <span class="org">Unimation / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">プログラム可能ロボットアームによる危険作業排除</p>
+        
+        
+        <footer>
+            <a href="https://spectrum.ieee.org/unimation-robot" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0285">
+        <header>
+            <h3><span class="met-id">CDH-MET-0285</span> Modicon PLC</h3>
+            <div class="meta">
+                <span class="name-en">Modicon Programmable Logic Controller</span>
+                <span class="era">1968–現在</span>
+                <span class="originator">Dick Morley</span>
+                <span class="org">Bedford Associates / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">リレー配線→プログラムへ置換</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">program_change_time_reduction</span>: <strong>97.0 %</strong> <span class="case">（Modicon PLC, 1969）</span> <a href="https://www.aec-engineering.com/the-first-programmable-logic-controller-the-modicon-084/" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://www.aec-engineering.com/the-first-programmable-logic-controller-the-modicon-084/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0286">
+        <header>
+            <h3><span class="met-id">CDH-MET-0286</span> CAD/CAM(CATIA)</h3>
+            <div class="meta">
+                <span class="name-en">CATIA CAD/CAM</span>
+                <span class="era">1977–現在</span>
+                <span class="originator">Dassault Systèmes</span>
+                <span class="org">Dassault / FRA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">設計→製造の統一データモデル</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/CATIA" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0287">
+        <header>
+            <h3><span class="met-id">CDH-MET-0287</span> CIM</h3>
+            <div class="meta">
+                <span class="name-en">Computer Integrated Manufacturing</span>
+                <span class="era">1980–現在</span>
+                <span class="originator">ISA/IBM</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">CAD/CAM/PLC/ERP統合</p>
+        
+        <div class="critique"><div class="ev-label">批判・限界</div><ul><li><strong>GM Saturn事例（2009）</strong>: GM Saturn $45B投資で市場シェア1%up・2009年破産。技術至上主義の失敗 <a href="https://tech.slashdot.org/story/19/01/05/0248207/what-happened-when-automation-came-to-general-motors" target="_blank" rel="noopener">出典</a></li></ul></div>
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Computer-integrated_manufacturing" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0288">
+        <header>
+            <h3><span class="met-id">CDH-MET-0288</span> FMS(柔軟生産)</h3>
+            <div class="meta">
+                <span class="name-en">Flexible Manufacturing System</span>
+                <span class="era">1975–現在</span>
+                <span class="originator">MIT/自動車業界</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">CNC機械+AGV+中央制御</p>
+        
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Flexible_manufacturing_system" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: mature / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0289">
+        <header>
+            <h3><span class="met-id">CDH-MET-0289</span> Universal Robots Cobot</h3>
+            <div class="meta">
+                <span class="name-en">Cobot</span>
+                <span class="era">2008–現在</span>
+                <span class="originator">Universal Robots</span>
+                <span class="org">Universal Robots / DNK</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">安全フェンス不要の中小企業向け協働ロボット</p>
+        
+        
+        <footer>
+            <a href="https://www.universal-robots.com/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0290">
+        <header>
+            <h3><span class="met-id">CDH-MET-0290</span> RPA</h3>
+            <div class="meta">
+                <span class="name-en">Robotic Process Automation</span>
+                <span class="era">2010–現在</span>
+                <span class="originator">Blue Prism/UiPath</span>
+                <span class="org">- / GBR</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">デスク業務の画面スクレイピング自動化</p>
+        
+        
+        <footer>
+            <a href="https://ramamtech.com/blog/the-history-of-robotic-process-automation" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0291">
+        <header>
+            <h3><span class="met-id">CDH-MET-0291</span> Amazon Kiva</h3>
+            <div class="meta">
+                <span class="name-en">Amazon Kiva Robotics</span>
+                <span class="era">2012–現在</span>
+                <span class="originator">Amazon</span>
+                <span class="org">Amazon / USA</span>
+                <span class="axis-tag" data-axis="M1">M1 労働の分解と再構成</span>
+            </div>
+        </header>
+        <p class="mechanism">モジュール式搬送ロボット</p>
+        <div class="evidence"><div class="ev-label">数値実証</div><ul><li><span class="metric">picking_capacity_ratio</span>: <strong>3.5 倍</strong> <span class="case">（Amazon Kiva, 2014）</span> <a href="https://en.wikipedia.org/wiki/Amazon_Robotics" target="_blank" rel="noopener">出典</a></li></ul></div>
+        
+        <footer>
+            <a href="https://en.wikipedia.org/wiki/Amazon_Robotics" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0292">
+        <header>
+            <h3><span class="met-id">CDH-MET-0292</span> AI検査</h3>
+            <div class="meta">
+                <span class="name-en">AI Visual Inspection</span>
+                <span class="era">2015–現在</span>
+                <span class="originator">GE/Siemens他</span>
+                <span class="org">- / GLOBAL</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">画像認識+機械学習による検査自動化</p>
+        
+        
+        <footer>
+            <a href="https://hailo.ai/applications/industrial-automation/automatic-optical-inspection/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0293">
+        <header>
+            <h3><span class="met-id">CDH-MET-0293</span> 生成AI白カラー自動化</h3>
+            <div class="meta">
+                <span class="name-en">Generative AI Office Automation</span>
+                <span class="era">2022–現在</span>
+                <span class="originator">OpenAI/Anthropic</span>
+                <span class="org">- / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">文章・コード・分析自動化</p>
+        
+        
+        <footer>
+            <a href="https://www.anthropic.com/" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+
+    <article class="method" id="CDH-MET-0294">
+        <header>
+            <h3><span class="met-id">CDH-MET-0294</span> 自動運転トラック</h3>
+            <div class="meta">
+                <span class="name-en">Autonomous Trucking</span>
+                <span class="era">2024–現在</span>
+                <span class="originator">Aurora/Waymo</span>
+                <span class="org">Aurora / USA</span>
+                <span class="axis-tag" data-axis="M6">M6 情報の自動化と知能化</span>
+            </div>
+        </header>
+        <p class="mechanism">AI+LiDAR+複合センサのドライバーレス輸送</p>
+        
+        
+        <footer>
+            <a href="https://www.truckinginfo.com/news/report-autonomous-vehicles-could-save-trucking-300-billion-in-labor-costs" target="_blank" rel="noopener">一次資料 ↗</a>
+            <span class="status">status: active / verified</span>
+        </footer>
+    </article>
+    
+        </div>
+    </section>
+    
+        
+<section class="chapter-section" id="mechanism-axes">
+    <h2>統合: 6メカニズム軸</h2>
+    <p>15領域・158手法を横断分析すると、コストダウンは6つのメカニズム軸の累積的・複合的作用として整理できる。各手法は1つ以上の軸に属する。</p>
+    <div class="axes-grid">
+        <div class="axis-card"><h4>M1 労働の分解と再構成</h4><p>27手法。代表例: 動作研究, 科学的管理法, ムービングアセンブリライン, 5ドル給与制度, ジャストインタイム(JIT), Levittown開発 ...</p></div><div class="axis-card"><h4>M2 学習効果と規模効果</h4><p>18手法。代表例: 規模の経済, 経験曲線(Wright&#x27;s Law), ムーアの法則, 経験曲線(BCG), Haitz&#x27;s Law(LED), 原子力負学習曲線 ...</p></div><div class="axis-card"><h4>M3 品質の事前組込み</h4><p>16手法。代表例: 自働化, 統計的品質管理(SQC), 実験計画法(DoE), 特性要因図, Deming 14原則, Quality Trilogy ...</p></div><div class="axis-card"><h4>M4 設計時のコスト織込み</h4><p>20手法。代表例: 直接原価計算, 標準原価計算, 価値工学(VE), 価値分析(VA), 原価企画, 原価維持 ...</p></div><div class="axis-card"><h4>M5 境界の解体と再結合</h4><p>48手法。代表例: 互換性部品, Sears Modern Homes, 取引費用経済学, ISOねじ規格, コンテナ化, PC工法 ...</p></div><div class="axis-card"><h4>M6 情報の自動化と知能化</h4><p>29手法。代表例: Watt遠心調速機, Cybernetics, NC工作機械, PRONTO NC言語, 構造化プログラミング, Modicon PLC ...</p></div>
+    </div>
+</section>
+
+        
+<section class="chapter-section" id="stats">
+    <h2>統計</h2>
+    <table class="stats-table">
+        <tr><th>項目</th><th>件数</th></tr>
+        <tr><td>手法（methods）</td><td>158</td></tr>
+        <tr><td>数値実証（evidence）</td><td>26</td></tr>
+        <tr><td>系譜関係（genealogy）</td><td>27</td></tr>
+        <tr><td>批判・限界（critiques）</td><td>9</td></tr>
+        <tr><td>領域（regions）</td><td>15</td></tr>
+        <tr><td>ドメイン（domains）</td><td>11</td></tr>
+        <tr><td>メカニズム軸</td><td>6</td></tr>
+    </table>
+</section>
+
+        
+<section class="chapter-section" id="about">
+    <h2>DB概要</h2>
+    <p>Cost-Down History DB (CDH-DB) は、技術・開発のコストダウンに関する230年史を15領域に分割して並列リサーチ（researcher エージェント x15体、バックグラウンド同時実行）で網羅した知識基盤である。一次資料URL必須、ハルシネーション排除を品質基準とし、未検証項目には requires_review フラグを付ける運用とする。</p>
+    <h3>スキーマ</h3>
+    <p>5テーブル構造（methods / evidence / genealogy / critiques / domains）。SQLite 形式で公開し、HTML ダッシュボードは textbook.html スタイル（赤白CI #CC1400、Noto Sans/Serif JP、サイドバー目次、ダークモード対応）に準拠する。</p>
+    <h3>収集メタ</h3>
+    <ul>
+        <li>着手日: 2026-05-13</li>
+        <li>方法: researcher エージェント x15体 並列バックグラウンド</li>
+        <li>主要ソース: Wikipedia / 一次論文 / 企業年史 / 学術DB</li>
+        <li>リポジトリ: <a href="https://github.com/yuyanishimura0312/cost-down-history-db" target="_blank">github.com/yuyanishimura0312/cost-down-history-db</a></li>
+    </ul>
+    <h3>引用</h3>
+    <pre>西村勇也 (2026). Cost-Down History DB v1.0. NPO法人ミラツク. https://yuyanishimura0312.github.io/cost-down-history-db/</pre>
+</section>
+
+    </main>
+</div>
+<script>
+const root = document.documentElement;
+const saved = localStorage.getItem("cdh-theme");
+if (saved) root.setAttribute("data-theme", saved);
+document.getElementById("themeBtn").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", cur);
+    localStorage.setItem("cdh-theme", cur);
+});
+</script>
+</body>
+</html>
