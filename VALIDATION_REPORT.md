@@ -1,6 +1,6 @@
 # Cost-Down History DB (CDH-DB) v1.0 — 検証レポート
 
-_検証実施日時: 2026-05-15 00:52:36_  
+_検証実施日時: 2026-05-15 08:16:14_  
 _対象DB: `/Users/nishimura+/projects/research/cost-down-history-db/cdh.sqlite`_  
 _検証スクリプト: `scripts/validate_db.py`_  
 
@@ -93,17 +93,15 @@ methods.primary_source_url / evidence.source_url / critiques.source_url を重�
 
 | 区分 | 内容 |
 |---|---|
-| WARN | URL liveness: 360/435 OK (75 failure, 22.9s @ 24 parallel) |
+| WARN | URL liveness: 363/435 OK (72 failure, 27.4s @ 24 parallel) |
 
 ### 6.1. 失敗 URL 一覧
 
 | URL | ステータス | エラー |
 |---|---|---|
-| https://www.projectmanagement.com/blog-post/412/does-six-sigma-kill-creativity- | 302 | HTTPError 302 |
 | https://www.nature.com/articles/nature.2015.18190 | 303 | HTTPError 303 |
 | https://academic.oup.com/cmlj/article/19/1/1/7425593 | 403 | HTTPError 403 |
 | https://academic.oup.com/nar/article/52/D1/D368/7337620 | 403 | HTTPError 403 |
-| https://arc.aiaa.org/doi/10.2514/8.155 | 403 | HTTPError 403 |
 | https://breakingdefense.com/2021/09/new-f-35-sustainment-deal-creates-path-to-lo | 403 | HTTPError 403 |
 | https://breakingdefense.com/2021/09/new-f-35-sustainment-deal-creates-path-to-lockheed-multi-year-pbl-contract/ | 403 | HTTPError 403 |
 | https://circulareconomy.europa.eu/platform/en/good-practices/light-service-green-performance-economy-schiphol-airport | 403 | HTTPError 403 |
@@ -111,7 +109,6 @@ methods.primary_source_url / evidence.source_url / critiques.source_url を重�
 | https://dodcio.defense.gov/cmmc/About/ | 403 | HTTPError 403 |
 | https://health.ec.europa.eu/system/files/2016-11/erp_reimbursement_medicinal_products_en.pdf | 403 | HTTPError 403 |
 | https://tech.slashdot.org/story/19/01/05/0248207/what-happened-when-automation-came-to-general-motors | 403 | HTTPError 403 |
-| https://www.adb.org/sites/default/files/publication/964626/adb-brief-299-india-unified-payments-interface.pdf | 403 | HTTPError 403 |
 | https://www.bcg.com/ja-jp/increase-resilience-global-supply-chain | 403 | HTTPError 403 |
 | https://www.bcg.com/publications/1968/business-unit-strategy-growth-experience-curve | 403 | HTTPError 403 |
 | https://www.business-humanrights.org/en/latest-news/china-bbc-investigation-reveals-shein-suppliers-workers-face-75-hour-work-weeks-low-wages-incl-co-company-comment/ | 403 | HTTPError 403 |
@@ -124,10 +121,10 @@ methods.primary_source_url / evidence.source_url / critiques.source_url を重�
 | https://www.innocentive.com/ | 403 | HTTPError 403 |
 | https://www.mdpi.com/2227-9717/12/8/1612 | 403 | HTTPError 403 |
 | https://www.netsuite.com/portal/resource/articles/erp/distribution-requirement-planning-drp.shtml | 403 | HTTPError 403 |
+| https://www.projectmanagement.com/blog-post/412/does-six-sigma-kill-creativity- | 403 | HTTPError 403 |
 | https://www.sciencedirect.com/science/article/pii/S1544319124003029 | 403 | HTTPError 403 |
-| https://www.tandfonline.com/doi/abs/10.1080/00207540050031823 | 403 | HTTPError 403 |
 | https://www.transportation.gov/testimony/benefits-next-generation-air-transportation-system | 403 | HTTPError 403 |
-| https://www.value-eng.org/ | 403 | HTTPError 403 |
+| https://www.value-eng.org/page/ValueStandards | 403 | HTTPError 403 |
 | https://www.zipcar.com/carsharing | 403 | HTTPError 403 |
 | https://en.wikipedia.org/wiki/I-SPY_trial | 404 | HTTPError 404 |
 | https://evboosters.com/ev-charging-news/the-blueprint-of-an-empire-how-byd-built-global-dominance-through-vertical-integration/ | 404 | HTTPError 404 |
@@ -146,6 +143,7 @@ methods.primary_source_url / evidence.source_url / critiques.source_url を重�
 | https://www.nasa.gov/commercial-crew-program/ | 404 | HTTPError 404 |
 | https://www.nasa.gov/commercial-resupply-services/ | 404 | HTTPError 404 |
 | https://www.pennmedicine.org/news/study-finds-telemedicine-visits-cost-far-less- | 404 | HTTPError 404 |
+| https://www.planet.com/business/ | 404 | HTTPError 404 |
 | https://www.relativityspace.com/technology | 404 | HTTPError 404 |
 | https://www.roboze.com/en/resources/blog/additive-manufacturing-vs-traditional-manufacturing-cost-and-advantages-of-3d-printing-technology | 404 | HTTPError 404 |
 | https://www.schrodinger.com/life-science/learn/white-papers/reversing-erooms-law | 404 | HTTPError 404 |
@@ -159,20 +157,19 @@ methods.primary_source_url / evidence.source_url / critiques.source_url を重�
 | https://www.lesswrong.com/posts/byNYzsfFmb2TpYFPW/o1-a-technical-primer | 429 | HTTPError 429 |
 | https://innovationlabasia.dk/en/shenzhen-the-spot-for-rapid-prototyping/ | 451 | HTTPError 451 |
 | https://auronomics.com/southwest-airlines-jet-fuel-hedge-strategy-a-case-study-in-risk-management/ | - | URLError: [Errno 8] nodename nor servname provided, or not known |
+| https://azure.microsoft.com/en-us/blog/introducing-phi-3-redefining-whats-possib | - | timeout |
+| https://azure.microsoft.com/en-us/blog/introducing-phi-3-redefining-whats-possible-with-slms/ | - | timeout |
 | https://corporate.ford.com/articles/history/the-model-t/ | - | timeout |
 | https://indianote.asia/india-it-big3 | - | URLError: [Errno 8] nodename nor servname provided, or not known |
 | https://maaw.info/ArticleSummaries/ArtSumKaplanAnderson2007.htm | - | URLError: [Errno 61] Connection refused |
-| https://martinfowler.com/articles/continuousIntegration.html | - | URLError: timed out |
-| https://martinfowler.com/articles/microservice-trade-offs.html | - | URLError: timed out |
-| https://martinfowler.com/articles/microservices.html | - | URLError: timed out |
-| https://militaryembedded.com/radar-ew/signal-processing/cots-procurement-years-the-perry-memo | - | timeout |
 | https://strateos.com/ | - | URLError: timed out |
+| https://www.aerofarms.com/this-vertical-farm-uses-95-less-water-and-no-soil/ | - | timeout |
 | https://www.carbios.com/en/enzymatic-recycling/ | - | URLError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1081) |
+| https://www.cio.inc/how-exscientia-reduces-drug-discovery-time-with-gen-ai-a-230 | - | timeout |
 | https://www.gnu.org/gnu/initial-announcement.en.html | - | URLError: timed out |
 | https://www.greencarcongress.com/2011/02/maersk-20110221.html | - | URLError: [Errno 8] nodename nor servname provided, or not known |
 | https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/our-insights/the-return-of-zero-base-budgeting | - | timeout |
 | https://www.nvidous.com/blogs/rpa-cost-reduction | - | URLError: [Errno 8] nodename nor servname provided, or not known |
-| https://www.planet.com/business/ | - | timeout |
 | https://www.researchforteachers.org.uk/sites/default/files/Docs/Bloom%20(1968)%20Learning%20for%20Mastery_0.pdf | - | URLError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'www.researchforteachers.org.uk'. (_ssl.c:1081) |
 
 ## 7. ハルシネーション疑い
