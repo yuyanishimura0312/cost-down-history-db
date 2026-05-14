@@ -1,6 +1,6 @@
 # Cost-Down History DB (CDH-DB) v1.0 — 検証レポート
 
-_検証実施日時: 2026-05-14 08:15:23_  
+_検証実施日時: 2026-05-14 11:45:33_  
 _対象DB: `/Users/nishimura+/projects/research/cost-down-history-db/cdh.sqlite`_  
 _検証スクリプト: `scripts/validate_db.py`_  
 
@@ -18,15 +18,15 @@ _検証スクリプト: `scripts/validate_db.py`_
 | WARN | 5 |
 | FAIL | 0 |
 
-テーブル別レコード数は以下の通りである。スキーマ定義どおりに methods 213 件 / evidence 51 件 / genealogy 46 件 / critiques 16 件 / domains 11 件が格納されている。
+テーブル別レコード数は以下の通りである。スキーマ定義どおりに methods 306 件 / evidence 90 件 / genealogy 70 件 / critiques 22 件 / domains 15 件が格納されている。
 
 | テーブル | 行数 |
 |---|---|
-| methods | 213 |
-| evidence | 51 |
-| genealogy | 46 |
-| critiques | 16 |
-| domains | 11 |
+| methods | 306 |
+| evidence | 90 |
+| genealogy | 70 |
+| critiques | 22 |
+| domains | 15 |
 
 ## 2. スキーマ整合性
 
@@ -67,7 +67,7 @@ era_start が 1700–2030 の西暦範囲に収まること、era_start < era_en
 |---|---|
 | PASS | no self-loops in genealogy |
 | PASS | no cycles detected in genealogy DAG |
-| WARN | year_transition era misalignment (5): [('CDH-REL-0083', 'year_transition before parent.era_start', 2013, 2018), ('CDH-REL-0087', 'year_transition before parent.era_start', 2008, 2011), ('CDH-REL-0096', 'year_transition before parent.era_start', 1769, 1770), ('CDH-REL-0097', 'year_transition before parent.era_start', 1775, 1788), ('CDH-REL-0098', 'year_transition before parent.era_start', 1771, 1776)] |
+| WARN | year_transition era misalignment (9): [('CDH-REL-0083', 'year_transition before parent.era_start', 2013, 2018), ('CDH-REL-0087', 'year_transition before parent.era_start', 2008, 2011), ('CDH-REL-0096', 'year_transition before parent.era_start', 1769, 1770), ('CDH-REL-0097', 'year_transition before parent.era_start', 1775, 1788), ('CDH-REL-0098', 'year_transition before parent.era_start', 1771, 1776)] |
 
 ## 5. メカニズム軸の分布
 
@@ -75,12 +75,12 @@ era_start が 1700–2030 の西暦範囲に収まること、era_start < era_en
 
 | 軸 | 手法数 |
 |---|---|
-| M1 | 33 |
-| M2 | 23 |
-| M3 | 30 |
-| M4 | 26 |
-| M5 | 63 |
-| M6 | 38 |
+| M1 | 37 |
+| M2 | 29 |
+| M3 | 36 |
+| M4 | 31 |
+| M5 | 105 |
+| M6 | 68 |
 
 | 区分 | 内容 |
 |---|---|
@@ -93,7 +93,7 @@ methods.primary_source_url / evidence.source_url / critiques.source_url を重�
 
 | 区分 | 内容 |
 |---|---|
-| WARN | URL liveness: 205/242 OK (37 failure, 20.4s @ 24 parallel) |
+| WARN | URL liveness: 295/347 OK (52 failure, 20.8s @ 24 parallel) |
 
 ### 6.1. 失敗 URL 一覧
 
@@ -101,41 +101,56 @@ methods.primary_source_url / evidence.source_url / critiques.source_url を重�
 |---|---|---|
 | https://www.nature.com/articles/nature.2015.18190 | 303 | HTTPError 303 |
 | https://academic.oup.com/nar/article/52/D1/D368/7337620 | 403 | HTTPError 403 |
+| https://breakingdefense.com/2021/09/new-f-35-sustainment-deal-creates-path-to-lockheed-multi-year-pbl-contract/ | 403 | HTTPError 403 |
 | https://direct.mit.edu/books/monograph/1856/Design-Rules-Volume-1The-Power-of-Modularity | 403 | HTTPError 403 |
+| https://dodcio.defense.gov/cmmc/About/ | 403 | HTTPError 403 |
+| https://health.ec.europa.eu/system/files/2016-11/erp_reimbursement_medicinal_products_en.pdf | 403 | HTTPError 403 |
 | https://tech.slashdot.org/story/19/01/05/0248207/what-happened-when-automation-came-to-general-motors | 403 | HTTPError 403 |
-| https://www.adb.org/sites/default/files/publication/964626/adb-brief-299-india-unified-payments-interface.pdf | 403 | HTTPError 403 |
 | https://www.bcg.com/ja-jp/increase-resilience-global-supply-chain | 403 | HTTPError 403 |
 | https://www.bcg.com/publications/1968/business-unit-strategy-growth-experience-curve | 403 | HTTPError 403 |
+| https://www.congress.gov/crs-product/IF12558 | 403 | HTTPError 403 |
+| https://www.congress.gov/crs-product/R41909 | 403 | HTTPError 403 |
+| https://www.defensesbirsttr.mil/SBIR-STTR/ | 403 | HTTPError 403 |
 | https://www.ecr-community.org/ | 403 | HTTPError 403 |
 | https://www.emerald.com/insight/content/doi/10.1108/jmtm-08-2018-0270/full/html | 403 | HTTPError 403 |
 | https://www.iea.org/ | 403 | HTTPError 403 |
 | https://www.innocentive.com/ | 403 | HTTPError 403 |
 | https://www.netsuite.com/portal/resource/articles/erp/distribution-requirement-planning-drp.shtml | 403 | HTTPError 403 |
 | https://www.projectmanagement.com/blog-post/412/does-six-sigma-kill-creativity- | 403 | HTTPError 403 |
-| https://www.value-eng.org/ | 403 | HTTPError 403 |
-| https://www.value-eng.org/page/ValueStandards | 403 | HTTPError 403 |
+| https://www.sciencedirect.com/science/article/pii/S1544319124003029 | 403 | HTTPError 403 |
+| https://www.transportation.gov/testimony/benefits-next-generation-air-transportation-system | 403 | HTTPError 403 |
 | https://deming.org/explore/pdsa-cycle/ | 404 | HTTPError 404 |
 | https://en.wikipedia.org/wiki/I-SPY_trial | 404 | HTTPError 404 |
 | https://evboosters.com/ev-charging-news/the-blueprint-of-an-empire-how-byd-built-global-dominance-through-vertical-integration/ | 404 | HTTPError 404 |
 | https://q-ctrl.com/blog/q-ctrl-transforms-quantum-advantage-outlook-breaking-previous-records-for-optimization-problems-and-outperforming-competitive-technologies-for-optimization-problems-and-outperforming-competitive-technologies/ | 404 | HTTPError 404 |
 | https://sciencedirect.com/article/pii/S1098301520322026 | 404 | HTTPError 404 |
 | https://sortly.com/blog/rfid-vs-barcode-for-inventory-tracking | 404 | HTTPError 404 |
+| https://spacenews.com/spacex-booster-reusability-cuts-falcon-9-launch-cost/ | 404 | HTTPError 404 |
 | https://www.2-data.com/knowledge-hub/a-history-of-salesforce | 404 | HTTPError 404 |
 | https://www.fda.gov/media/120060/download | 404 | HTTPError 404 |
 | https://www.fda.gov/regulatory-information/search-fda-guidance-documents/adaptive-design-clinical-trials-drugs-and-biologics-guidance-industry | 404 | HTTPError 404 |
 | https://www.ice.org.uk/news-views-insights/inside-infrastructure/smeaton-vs-watt-the-steam-engine-rivalry | 404 | HTTPError 404 |
+| https://www.nasa.gov/commercial-crew-program/ | 404 | HTTPError 404 |
+| https://www.nasa.gov/commercial-resupply-services/ | 404 | HTTPError 404 |
+| https://www.planet.com/business/ | 404 | HTTPError 404 |
+| https://www.relativityspace.com/technology | 404 | HTTPError 404 |
 | https://www.schrodinger.com/life-science/learn/white-papers/reversing-erooms-law-can-computers-dramtically-impact-productivity-drug-discovery/ | 404 | HTTPError 404 |
+| https://www.space.com/spacex-starlink-collision-avoidance | 404 | HTTPError 404 |
 | https://www.srgresearch.com/articles/cloud-market-jumped-to-330-billion-in-2024 | 404 | HTTPError 404 |
+| https://www.technologyreview.com/2019/08/02/131198/china-squirrel-has-started-a-grand-experiment-in-ai-education-it-could-reshape-how-the-world-learns/ | 404 | HTTPError 404 |
+| https://news.rice.edu/news/2025/openstax-surpasses-3b-student-savings-grows-beyond-textbooks | 406 | HTTPError 406 |
+| https://www.blueorigin.com/blue-moon/ | 429 | HTTPError 429 |
 | https://innovationlabasia.dk/en/shenzhen-the-spot-for-rapid-prototyping/ | 451 | HTTPError 451 |
-| https://www.federalregister.gov/documents/2024/09/18/2024-21078/conducting-clinical-trials-with-decentralized-elements | 500 | HTTPError 500 |
 | https://www.orcalean.com/article/genchi-genbutsu-toyota's-approach-to-quality-and-root-cause-analysis | 500 | HTTPError 500 |
-| https://maaw.info/ArticleSummaries/ArtSumKaplanAnderson2007.htm | 502 | HTTPError 502 |
-| https://azure.microsoft.com/en-us/blog/introducing-phi-3-redefining-whats-possible-with-slms/ | - | timeout |
+| https://auronomics.com/southwest-airlines-jet-fuel-hedge-strategy-a-case-study-in-risk-management/ | - | URLError: [Errno 8] nodename nor servname provided, or not known |
 | https://corporate.ford.com/articles/history/the-model-t/ | - | timeout |
 | https://indianote.asia/india-it-big3 | - | URLError: [Errno 8] nodename nor servname provided, or not known |
+| https://maaw.info/ArticleSummaries/ArtSumKaplanAnderson2007.htm | - | URLError: timed out |
 | https://strateos.com/ | - | URLError: timed out |
+| https://www.greencarcongress.com/2011/02/maersk-20110221.html | - | URLError: [Errno 8] nodename nor servname provided, or not known |
 | https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai-2024 | - | timeout |
 | https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/our-insights/the-return-of-zero-base-budgeting | - | timeout |
+| https://www.researchforteachers.org.uk/sites/default/files/Docs/Bloom%20(1968)%20Learning%20for%20Mastery_0.pdf | - | URLError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'www.researchforteachers.org.uk'. (_ssl.c:1081) |
 
 ## 7. ハルシネーション疑い
 
