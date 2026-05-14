@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDH 探索アプリ — Cost-Down History DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+    --accent: #121212; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+    --text: #121212; --text-secondary: #555; --text-muted: #6B6B6B;
+    --border: #D9D9D9; --border-light: #EEE; --surface: #F7F7F5;
+    --font: "Noto Sans JP", -apple-system, sans-serif;
+    --font-serif: "Noto Serif JP", Georgia, serif;
+}
+[data-theme="dark"] {
+    --bg: #121212; --card: #1A1A1A; --card-hover: #222;
+    --accent: #E0E0E0; --accent-warm: #FF4030; --accent-muted: rgba(255,64,48,0.10);
+    --text: #E0E0E0; --text-secondary: #AAA; --text-muted: #8A8A8A;
+    --border: #333; --border-light: #2A2A2A; --surface: #1A1A1A;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--font); font-feature-settings: "palt";
+    line-height: 1.7;
+}
+.top-bar {
+    position: sticky; top: 0; height: 56px; z-index: 100;
+    background: var(--bg); border-top: 3px solid var(--accent-warm);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+}
+[data-theme="dark"] .top-bar { border-top: 3px solid var(--accent-warm); }
+.brand { font-size: 14px; font-weight: 700; color: var(--accent-warm); letter-spacing: 0.05em; }
+.brand-sub { color: var(--text-secondary); font-weight: 400; margin-left: 8px; font-size: 12px; }
+.nav-link { color: var(--text-secondary); text-decoration: none; margin-right: 16px; font-size: 13px; }
+.nav-link:hover { color: var(--accent-warm); }
+.theme-toggle {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text); padding: 4px 12px; cursor: pointer; font-size: 12px; border-radius: 2px;
+}
+.layout { max-width: 1400px; margin: 0 auto; padding: 24px 32px 96px; }
+
+/* Stats banner */
+.stats-banner {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+}
+.stat-card {
+    padding: 14px; background: var(--surface);
+    border-left: 3px solid var(--accent-warm); border-radius: 2px;
+}
+.stat-label { font-size: 11px; color: var(--text-secondary); letter-spacing: 0.1em; text-transform: uppercase; }
+.stat-value { font-size: 24px; font-weight: 700; color: var(--accent-warm); margin-top: 2px; }
+
+/* Filter bar */
+.filter-bar {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    padding: 16px; background: var(--surface);
+    border: 1px solid var(--border-light); border-radius: 4px;
+    margin-bottom: 20px;
+}
+.filter-bar input, .filter-bar select {
+    padding: 8px 12px; font-size: 13px;
+    border: 1px solid var(--border); border-radius: 2px;
+    background: var(--bg); color: var(--text);
+    font-family: var(--font);
+}
+.filter-bar input[type="text"] { flex: 1 1 240px; }
+.filter-bar select { flex: 0 1 160px; }
+.filter-bar .count {
+    margin-left: auto; padding: 8px 12px; font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Main grid */
+.main-grid { display: grid; grid-template-columns: 1fr 480px; gap: 24px; }
+@media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
+
+/* Results list */
+.results-panel { min-height: 600px; }
+.results-list {
+    max-height: 75vh; overflow-y: auto;
+    border: 1px solid var(--border-light); border-radius: 4px;
+    background: var(--card);
+}
+.result-item {
+    padding: 12px 16px; border-bottom: 1px solid var(--border-light);
+    cursor: pointer; transition: background 0.15s;
+}
+.result-item:hover { background: var(--surface); }
+.result-item.active { background: var(--accent-muted); border-left: 3px solid var(--accent-warm); padding-left: 13px; }
+.result-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.result-meta {
+    display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--text-secondary);
+}
+.tag {
+    padding: 1px 6px; background: var(--accent-muted); color: var(--accent-warm);
+    border-radius: 2px; font-family: "SF Mono", monospace;
+}
+.met-id { font-family: "SF Mono", monospace; color: var(--text-muted); font-size: 10px; }
+
+/* Detail panel */
+.detail-panel {
+    position: sticky; top: 72px; max-height: 80vh; overflow-y: auto;
+    padding: 20px; border: 1px solid var(--border-light); border-radius: 4px;
+    background: var(--card);
+}
+.detail-empty { color: var(--text-muted); font-size: 13px; text-align: center; padding: 40px 0; }
+.detail h2 {
+    font-family: var(--font-serif); font-size: 20px; margin: 0 0 8px;
+    border-bottom: 2px solid var(--accent-warm); padding-bottom: 8px;
+}
+.detail h3 {
+    font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-secondary); margin: 16px 0 8px;
+}
+.detail .meta-row {
+    display: grid; grid-template-columns: 100px 1fr;
+    gap: 8px; font-size: 13px; padding: 4px 0;
+}
+.detail .meta-label { color: var(--text-secondary); }
+.detail .mechanism { font-family: var(--font-serif); font-size: 14px; padding: 12px; background: var(--surface); border-radius: 2px; }
+.detail ul { padding-left: 20px; font-size: 13px; }
+.detail .evidence-item { padding: 8px 0; border-bottom: 1px dotted var(--border-light); }
+.detail .critique-item { padding: 8px; background: var(--surface); border-left: 2px solid var(--text-muted); margin: 8px 0; font-size: 12px; }
+.detail .gen-item { padding: 4px 0; font-size: 12px; }
+.detail .gen-arrow { color: var(--accent-warm); margin: 0 6px; }
+.detail a { color: var(--accent-warm); text-decoration: none; }
+.detail a:hover { text-decoration: underline; }
+.detail .source-link { font-size: 12px; }
+
+/* Section tabs */
+.section-tabs {
+    display: flex; gap: 0; margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+.tab {
+    padding: 8px 16px; cursor: pointer; font-size: 13px;
+    border-bottom: 2px solid transparent; color: var(--text-secondary);
+}
+.tab.active { color: var(--accent-warm); border-bottom-color: var(--accent-warm); }
+.tab:hover { color: var(--accent-warm); }
+
+/* Heatmap mini */
+.heatmap-mini {
+    border-collapse: collapse; margin-top: 12px; font-size: 11px;
+}
+.heatmap-mini th, .heatmap-mini td {
+    padding: 4px 6px; border: 1px solid var(--border-light); text-align: center;
+}
+.heatmap-mini th { background: var(--surface); }
+.heatmap-mini td { min-width: 28px; }
+
+.loading { text-align: center; padding: 60px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<nav class="top-bar">
+    <div>
+        <span class="brand">CDH-DB</span>
+        <span class="brand-sub">Explorer App v1.3</span>
+    </div>
+    <div>
+        <a href="index.html" class="nav-link">一覧</a>
+        <a href="analytics.html" class="nav-link">分析</a>
+        <a href="https://github.com/yuyanishimura0312/cost-down-history-db" class="nav-link">GitHub</a>
+        <button id="themeBtn" class="theme-toggle">ダーク／ライト</button>
+    </div>
+</nav>
+<div class="layout">
+    <div class="stats-banner" id="statsBanner"></div>
+    <div class="section-tabs">
+        <div class="tab active" data-tab="search">手法検索</div>
+        <div class="tab" data-tab="genealogy">系譜探索</div>
+        <div class="tab" data-tab="critiques">批判マッピング</div>
+        <div class="tab" data-tab="verification">検証状態</div>
+    </div>
+    <div id="searchView">
+        <div class="filter-bar">
+            <input type="text" id="searchBox" placeholder="手法名・提唱者・組織で検索（部分一致）...">
+            <select id="domainFilter"><option value="">全ドメイン</option></select>
+            <select id="axisFilter">
+                <option value="">全軸</option>
+                <option value="M1">M1 労働分解</option>
+                <option value="M2">M2 学習効果</option>
+                <option value="M3">M3 品質組込み</option>
+                <option value="M4">M4 設計コスト</option>
+                <option value="M5">M5 境界解体</option>
+                <option value="M6">M6 情報知能化</option>
+            </select>
+            <select id="eraFilter">
+                <option value="">全時代</option>
+                <option value="1700">1700-1799</option>
+                <option value="1800">1800-1899</option>
+                <option value="1900">1900-1949</option>
+                <option value="1950">1950-1989</option>
+                <option value="1990">1990-2009</option>
+                <option value="2010">2010-2025</option>
+            </select>
+            <div class="count" id="resultCount">読込中...</div>
+        </div>
+        <div class="main-grid">
+            <div class="results-panel">
+                <div class="results-list" id="resultsList"><div class="loading">読込中...</div></div>
+            </div>
+            <div class="detail-panel">
+                <div id="detailContent"><div class="detail-empty">← 左から手法を選択</div></div>
+            </div>
+        </div>
+    </div>
+    <div id="genealogyView" style="display:none">
+        <p style="font-size:13px;color:var(--text-secondary)">手法を選び、派生関係を視覚化します。表示は最大3階層。</p>
+        <div class="filter-bar">
+            <select id="genRoot"><option value="">手法を選択...</option></select>
+        </div>
+        <div id="genealogyTree" style="padding:16px;background:var(--surface);border-radius:4px;min-height:300px;font-size:13px"></div>
+    </div>
+    <div id="critiquesView" style="display:none">
+        <p style="font-size:13px;color:var(--text-secondary)">47件の批判を年代順・類型別に整理。</p>
+        <div id="critiquesGrid"></div>
+    </div>
+    <div id="verificationView" style="display:none">
+        <p style="font-size:13px;color:var(--text-secondary)">verified 97.1% / requires_review 10件の精査リスト。</p>
+        <div id="verifList"></div>
+    </div>
+</div>
+<script>
+const root = document.documentElement;
+if (localStorage.getItem("cdh-theme")) root.setAttribute("data-theme", localStorage.getItem("cdh-theme"));
+document.getElementById("themeBtn").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", cur);
+    localStorage.setItem("cdh-theme", cur);
+});
+
+let DATA = null;
+let methodsById = {};
+let evByMethod = {};
+let crtByMethod = {};
+let genByParent = {};
+let genByChild = {};
+
+const MECH = {M1:"労働分解",M2:"学習効果",M3:"品質組込",M4:"設計コスト",M5:"境界解体",M6:"情報知能化"};
+
+async function load() {
+    const r = await fetch("data.json");
+    DATA = await r.json();
+    DATA.methods.forEach(m => methodsById[m.method_id] = m);
+    DATA.evidence.forEach(e => (evByMethod[e.method_id] ||= []).push(e));
+    DATA.critiques.forEach(c => (crtByMethod[c.method_id] ||= []).push(c));
+    DATA.genealogy.forEach(g => {
+        (genByParent[g.parent_method_id] ||= []).push(g);
+        (genByChild[g.child_method_id] ||= []).push(g);
+    });
+    renderStats();
+    fillFilters();
+    render();
+    fillGenRoot();
+    renderCritiques();
+    renderVerification();
+}
+
+function renderStats() {
+    const s = DATA.stats;
+    document.getElementById("statsBanner").innerHTML = `
+        <div class="stat-card"><div class="stat-label">手法</div><div class="stat-value">${s.methods}</div></div>
+        <div class="stat-card"><div class="stat-label">実証</div><div class="stat-value">${s.evidence}</div></div>
+        <div class="stat-card"><div class="stat-label">系譜</div><div class="stat-value">${s.genealogy}</div></div>
+        <div class="stat-card"><div class="stat-label">批判</div><div class="stat-value">${s.critiques}</div></div>
+        <div class="stat-card"><div class="stat-label">ドメイン</div><div class="stat-value">${s.domains}</div></div>
+        <div class="stat-card"><div class="stat-label">期間</div><div class="stat-value">230年</div></div>
+    `;
+}
+
+function fillFilters() {
+    const sel = document.getElementById("domainFilter");
+    DATA.domains.sort((a,b)=>a.code.localeCompare(b.code)).forEach(d => {
+        const o = document.createElement("option");
+        o.value = d.code; o.textContent = `${d.code} ${d.name_ja}`;
+        sel.appendChild(o);
+    });
+}
+
+function fillGenRoot() {
+    const sel = document.getElementById("genRoot");
+    DATA.methods.sort((a,b)=>(a.era_start||0)-(b.era_start||0)).forEach(m => {
+        const o = document.createElement("option");
+        o.value = m.method_id; o.textContent = `${m.name_ja} (${m.era_start||"?"})`;
+        sel.appendChild(o);
+    });
+    sel.addEventListener("change", () => renderGenealogy(sel.value));
+}
+
+function filterMethods() {
+    const q = document.getElementById("searchBox").value.toLowerCase();
+    const dom = document.getElementById("domainFilter").value;
+    const axis = document.getElementById("axisFilter").value;
+    const era = document.getElementById("eraFilter").value;
+    let list = DATA.methods.filter(m => {
+        if (dom && m.domain_code !== dom) return false;
+        if (axis && m.mechanism_axis !== axis) return false;
+        if (era) {
+            const e = parseInt(era);
+            const me = m.era_start || 0;
+            if (e === 1700 && (me < 1700 || me >= 1800)) return false;
+            if (e === 1800 && (me < 1800 || me >= 1900)) return false;
+            if (e === 1900 && (me < 1900 || me >= 1950)) return false;
+            if (e === 1950 && (me < 1950 || me >= 1990)) return false;
+            if (e === 1990 && (me < 1990 || me >= 2010)) return false;
+            if (e === 2010 && me < 2010) return false;
+        }
+        if (q) {
+            const hay = `${m.name_ja} ${m.name_en} ${m.originator||""} ${m.origin_org||""} ${m.mechanism||""}`.toLowerCase();
+            if (!hay.includes(q)) return false;
+        }
+        return true;
+    });
+    return list.sort((a,b)=>(a.era_start||0)-(b.era_start||0));
+}
+
+function render() {
+    const list = filterMethods();
+    document.getElementById("resultCount").textContent = `${list.length} / ${DATA.methods.length}`;
+    const html = list.map(m => `
+        <div class="result-item" data-id="${m.method_id}">
+            <div class="result-name">${escapeHtml(m.name_ja)} <span class="met-id">${m.method_id}</span></div>
+            <div class="result-meta">
+                <span class="tag">${m.domain_code}</span>
+                <span class="tag">${m.mechanism_axis}</span>
+                <span>${m.era_start||"?"}</span>
+                <span>${escapeHtml(m.originator||"")}</span>
+                <span>${escapeHtml(m.origin_country||"")}</span>
+            </div>
+        </div>
+    `).join("");
+    document.getElementById("resultsList").innerHTML = html || '<div class="loading">該当なし</div>';
+    document.querySelectorAll(".result-item").forEach(el => {
+        el.addEventListener("click", () => {
+            document.querySelectorAll(".result-item").forEach(e => e.classList.remove("active"));
+            el.classList.add("active");
+            renderDetail(el.dataset.id);
+        });
+    });
+}
+
+function renderDetail(mid) {
+    const m = methodsById[mid];
+    const evs = evByMethod[mid] || [];
+    const crts = crtByMethod[mid] || [];
+    const parents = (genByChild[mid] || []).map(g => methodsById[g.parent_method_id]).filter(Boolean);
+    const children = (genByParent[mid] || []).map(g => methodsById[g.child_method_id]).filter(Boolean);
+
+    const evHtml = evs.length ? evs.map(e => `
+        <div class="evidence-item">
+            <strong>${escapeHtml(e.metric_type)}</strong>: ${e.value} ${escapeHtml(e.unit||"")} <br>
+            <small>${escapeHtml(e.baseline||"")} → ${escapeHtml(e.company_case||"")} (${e.year||"?"}) <a href="${escapeHtml(e.source_url||"#")}" target="_blank">出典</a></small>
+        </div>
+    `).join("") : '<small style="color:var(--text-muted)">なし</small>';
+
+    const crtHtml = crts.length ? crts.map(c => `
+        <div class="critique-item">
+            <strong>${escapeHtml(c.critic||"?")} (${c.year||"?"})</strong> [${escapeHtml(c.critique_type||"")}]<br>
+            ${escapeHtml(c.description||"")}<br>
+            <a href="${escapeHtml(c.source_url||"#")}" target="_blank" class="source-link">出典</a>
+        </div>
+    `).join("") : '<small style="color:var(--text-muted)">なし</small>';
+
+    const parHtml = parents.length ? parents.map(p => `<div class="gen-item">← <a href="#" onclick="selectMethod('${p.method_id}');return false;">${escapeHtml(p.name_ja)}</a> <small class="met-id">${p.method_id}</small></div>`).join("") : '<small style="color:var(--text-muted)">なし</small>';
+    const chHtml = children.length ? children.map(p => `<div class="gen-item">→ <a href="#" onclick="selectMethod('${p.method_id}');return false;">${escapeHtml(p.name_ja)}</a> <small class="met-id">${p.method_id}</small></div>`).join("") : '<small style="color:var(--text-muted)">なし</small>';
+
+    document.getElementById("detailContent").innerHTML = `
+        <div class="detail">
+            <h2>${escapeHtml(m.name_ja)}</h2>
+            <div class="meta-row"><span class="meta-label">ID</span><span class="met-id">${m.method_id}</span></div>
+            <div class="meta-row"><span class="meta-label">英名</span><span><em>${escapeHtml(m.name_en||"")}</em></span></div>
+            <div class="meta-row"><span class="meta-label">ドメイン</span><span>${m.domain_code}</span></div>
+            <div class="meta-row"><span class="meta-label">メカ軸</span><span>${m.mechanism_axis} ${MECH[m.mechanism_axis]||""}</span></div>
+            <div class="meta-row"><span class="meta-label">時代</span><span>${m.era_start||"?"} – ${m.era_end===9999?"現在":m.era_end||"?"}</span></div>
+            <div class="meta-row"><span class="meta-label">提唱者</span><span>${escapeHtml(m.originator||"")}</span></div>
+            <div class="meta-row"><span class="meta-label">組織</span><span>${escapeHtml(m.origin_org||"")}</span></div>
+            <div class="meta-row"><span class="meta-label">国</span><span>${escapeHtml(m.origin_country||"")}</span></div>
+            <div class="meta-row"><span class="meta-label">ステータス</span><span>${m.status} / ${m.verification}</span></div>
+
+            <h3>メカニズム</h3>
+            <div class="mechanism">${escapeHtml(m.mechanism||"")}</div>
+
+            <h3>数値実証 (${evs.length}件)</h3>
+            ${evHtml}
+
+            <h3>系譜</h3>
+            <div><strong>派生元 (parent):</strong></div>${parHtml}
+            <div style="margin-top:8px"><strong>派生先 (child):</strong></div>${chHtml}
+
+            <h3>批判・限界 (${crts.length}件)</h3>
+            ${crtHtml}
+
+            <h3>一次資料</h3>
+            <a href="${escapeHtml(m.primary_source_url||"#")}" target="_blank" class="source-link">${escapeHtml(m.primary_source_url||"なし")}</a>
+        </div>
+    `;
+}
+
+window.selectMethod = function(mid) {
+    document.querySelectorAll(".result-item").forEach(e => e.classList.remove("active"));
+    const el = document.querySelector(`.result-item[data-id="${mid}"]`);
+    if (el) {
+        el.classList.add("active");
+        el.scrollIntoView({behavior:"smooth", block:"center"});
+    }
+    renderDetail(mid);
+};
+
+function escapeHtml(s) {
+    if (s == null) return "";
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+
+function renderGenealogy(rootId) {
+    if (!rootId) { document.getElementById("genealogyTree").innerHTML = ""; return; }
+    const tree = document.getElementById("genealogyTree");
+    const m = methodsById[rootId];
+    let html = `<div style="font-weight:700;font-size:16px;margin-bottom:12px">${escapeHtml(m.name_ja)} <span class="met-id">${rootId}</span></div>`;
+
+    // Parents (ancestors up to 3 levels)
+    html += '<div style="margin-bottom:16px"><strong>← 派生元 (parents)</strong>';
+    function climb(mid, depth) {
+        if (depth >= 3) return "";
+        const pars = (genByChild[mid] || []);
+        if (!pars.length) return "";
+        return pars.map(g => {
+            const p = methodsById[g.parent_method_id];
+            return `<div style="margin-left:${(depth)*20}px;padding:4px 0">
+                <a href="#" onclick="document.getElementById('genRoot').value='${p.method_id}';renderGenealogy('${p.method_id}');return false;">${escapeHtml(p.name_ja)}</a>
+                <small>(${p.era_start||"?"}, ${g.rel_type})</small>
+                ${climb(p.method_id, depth+1)}
+            </div>`;
+        }).join("");
+    }
+    html += climb(rootId, 0) || '<small style="color:var(--text-muted)">なし</small>';
+    html += '</div>';
+
+    // Children (descendants up to 3 levels)
+    html += '<div><strong>→ 派生先 (children)</strong>';
+    function descend(mid, depth) {
+        if (depth >= 3) return "";
+        const chs = (genByParent[mid] || []);
+        if (!chs.length) return "";
+        return chs.map(g => {
+            const ch = methodsById[g.child_method_id];
+            return `<div style="margin-left:${(depth)*20}px;padding:4px 0">
+                <a href="#" onclick="document.getElementById('genRoot').value='${ch.method_id}';renderGenealogy('${ch.method_id}');return false;">${escapeHtml(ch.name_ja)}</a>
+                <small>(${ch.era_start||"?"}, ${g.rel_type})</small>
+                ${descend(ch.method_id, depth+1)}
+            </div>`;
+        }).join("");
+    }
+    html += descend(rootId, 0) || '<small style="color:var(--text-muted)">なし</small>';
+    html += '</div>';
+
+    tree.innerHTML = html;
+}
+
+function renderCritiques() {
+    const list = DATA.critiques.slice().sort((a,b)=>(a.year||0)-(b.year||0));
+    const byType = {};
+    list.forEach(c => (byType[c.critique_type||"unknown"] ||= []).push(c));
+    let html = '';
+    Object.entries(byType).sort((a,b)=>b[1].length-a[1].length).forEach(([t,items]) => {
+        html += `<h3 style="margin-top:20px;color:var(--accent-warm)">${escapeHtml(t)} (${items.length}件)</h3>`;
+        items.forEach(c => {
+            const m = methodsById[c.method_id];
+            html += `<div class="critique-item">
+                <strong>${escapeHtml(m?m.name_ja:"?")}</strong> — ${escapeHtml(c.critic||"?")} (${c.year||"?"})<br>
+                ${escapeHtml(c.description||"")}<br>
+                <a href="${escapeHtml(c.source_url||"#")}" target="_blank" class="source-link">出典</a>
+            </div>`;
+        });
+    });
+    document.getElementById("critiquesGrid").innerHTML = html;
+}
+
+function renderVerification() {
+    const review = DATA.methods.filter(m => m.verification === "requires_review");
+    let html = `<h3>要再検証 (${review.length}件)</h3>`;
+    review.forEach(m => {
+        html += `<div class="result-item" onclick="document.querySelector('.tab[data-tab=search]').click();selectMethod('${m.method_id}')">
+            <div class="result-name">${escapeHtml(m.name_ja)} <span class="met-id">${m.method_id}</span></div>
+            <div class="result-meta">
+                <span class="tag">${m.domain_code}</span>
+                <span>${m.era_start||"?"}</span>
+                <span>${escapeHtml(m.origin_country||"")}</span>
+            </div>
+        </div>`;
+    });
+    document.getElementById("verifList").innerHTML = html;
+}
+
+// Tabs
+document.querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(e => e.classList.remove("active"));
+        t.classList.add("active");
+        ["search","genealogy","critiques","verification"].forEach(v => {
+            document.getElementById(v+"View").style.display = (v === t.dataset.tab) ? "" : "none";
+        });
+    });
+});
+
+document.getElementById("searchBox").addEventListener("input", render);
+document.getElementById("domainFilter").addEventListener("change", render);
+document.getElementById("axisFilter").addEventListener("change", render);
+document.getElementById("eraFilter").addEventListener("change", render);
+
+load();
+</script>
+</body>
+</html>

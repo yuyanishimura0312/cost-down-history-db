@@ -1,0 +1,57 @@
+{
+  "total": 346,
+  "verified": 336,
+  "requires_review": 10,
+  "requires_review_methods": [
+    {
+      "method_id": "CDH-MET-0306",
+      "name_ja": "ベンチャー型リスク分担(Roivant型)",
+      "origin_country": "USA"
+    },
+    {
+      "method_id": "CDH-MET-0468",
+      "name_ja": "薬剤給付管理(PBM)",
+      "origin_country": "USA"
+    },
+    {
+      "method_id": "CDH-MET-0471",
+      "name_ja": "投薬アドヒアランスAI監視(Proteus)",
+      "origin_country": "USA"
+    },
+    {
+      "method_id": "CDH-MET-0488",
+      "name_ja": "DAO分散自律組織",
+      "origin_country": "GLOBAL"
+    },
+    {
+      "method_id": "CDH-MET-0505",
+      "name_ja": "Starship反復試験開発",
+      "origin_country": "USA"
+    },
+    {
+      "method_id": "CDH-MET-0508",
+      "name_ja": "Blue Moon再利用月面着陸機",
+      "origin_country": "USA"
+    },
+    {
+      "method_id": "CDH-MET-0512",
+      "name_ja": "月火星ISRU現地資源活用",
+      "origin_country": "USA"
+    },
+    {
+      "method_id": "CDH-MET-0516",
+      "name_ja": "BloomTech ISA再教育",
+      "origin_country": "USA"
+    },
+    {
+      "method_id": "CDH-MET-0533",
+      "name_ja": "自動運航電動船(Yara Birkeland)",
+      "origin_country": "NOR"
+    },
+    {
+      "method_id": "CDH-MET-0574",
+      "name_ja": "Climeworks DAC Gen3",
+      "origin_country": "CHE"
+    }
+  ]
+}
