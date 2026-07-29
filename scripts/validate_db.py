@@ -352,7 +352,7 @@ def check_url(url: str) -> tuple:
     """Return (url, status_code, ok, error_msg)."""
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+                      "MiratukuResearchBot/1.0 (research data collection; contact: info@emerging-future.org)",
         "Accept": "*/*",
     }
     # Try HEAD first; if 405 or no useful response, fallback to GET (read 0 bytes).
